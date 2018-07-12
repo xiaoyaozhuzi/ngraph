@@ -173,8 +173,6 @@ if(NGRAPH_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
 
-include_directories("${NGRAPH_INCLUDE_PATH}")
-
 add_subdirectory(codegen)
 add_subdirectory(runtime)
 
@@ -223,7 +221,7 @@ endif()
 
 # nGraph
 install(FILES ${CMAKE_BINARY_DIR}/VERSION DESTINATION ${CMAKE_INSTALL_PREFIX})
-install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph.so
+install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph"
