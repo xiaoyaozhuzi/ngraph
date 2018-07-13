@@ -27,7 +27,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        class ExternalFunction;
         class TensorView;
 
         /// @brief Interface to a generic backend.
@@ -75,16 +74,10 @@ namespace ngraph
             virtual std::vector<PerformanceCounter>
                 get_performance_data(std::shared_ptr<Function> func) const;
 
-            static bool register_backend(const std::string& name, std::shared_ptr<Backend>);
-
         protected:
             void validate_call(std::shared_ptr<const Function> func,
                                const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
                                const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
-
-        private:
-            static void* open_shared_library(std::string type);
-            static std::map<std::string, std::string> get_registered_device_map();
         };
     }
 }
