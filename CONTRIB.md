@@ -19,7 +19,7 @@ Code formatting
 All C/C++ source code in the repository, including the test code, must
 adhere to the source-code formatting and style guidelines described
 here. The coding style described here applies to the nGraph repository.
-Related repositories may make adjustements to better match the coding
+Related repositories may make adjustments to better match the coding
 styles of libraries they are using.
 
 ### Adding ops to nGraph Core
