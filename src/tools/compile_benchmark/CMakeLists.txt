@@ -16,5 +16,5 @@
 
 if (NGRAPH_CPU_ENABLE)
     add_executable(compile_benchmark compile_benchmark.cpp)
-    target_link_libraries(compile_benchmark ngraph cpu_backend)
+    target_link_libraries(compile_benchmark ngraph codegen)
 endif()

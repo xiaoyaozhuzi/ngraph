@@ -29,5 +29,5 @@ if (NGRAPH_INTELGPU_ENABLE)
     target_include_directories(intelgpu_backend SYSTEM PUBLIC ${CLDNN_INCLUDE_DIRS})
     target_link_libraries(intelgpu_backend PUBLIC ${CLDNN_LIBRARIES})
 
-    install(TARGETS intelgpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+    install(TARGETS intelgpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB} EXPORT ngraph-targets)
 endif()

@@ -224,3 +224,24 @@ else()
 endif()
 
 add_subdirectory(doc)
+
+#-----------------------------------------------------------------------------------------------
+# Installation logic...
+#-----------------------------------------------------------------------------------------------
+
+# nGraph
+install(EXPORT ngraph-targets DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+# set(CPACK_GENERATOR "DEB")
+# set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+# set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A most excellent graph library")
+# set(CPACK_PACKAGE_NAME "nGraph")
+# set(CPACK_PACKAGE_CONTACT "Robert Kimball")
+# # set(CPACK_PACKAGE_VERSION
+# set(CPACK_PACKAGE_VENDOR "Intel Nervana")
+# # set(CPACK_PACKAGE_DESCRIPTION_FILE "")
+
+# set(CPACK_PACKAGE_VERSION_MAJOR ${NGRAPH_VERSION_MAJOR})
+# set(CPACK_PACKAGE_VERSION_MINOR ${NGRAPH_VERSION_MINOR})
+# set(CPACK_PACKAGE_VERSION_PATCH ${NGRAPH_VERSION_PATCH})
+# include(CPack)

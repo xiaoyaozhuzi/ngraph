@@ -58,5 +58,5 @@ if (NGRAPH_GPU_ENABLE)
         ${CUDNN_LIBRARIES})
     set_target_properties(gpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
-    install(TARGETS gpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+    install(TARGETS gpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB} EXPORT ngraph-targets)
 endif()

@@ -61,5 +61,11 @@ endif()
 
 ExternalProject_Get_Property(ext_json SOURCE_DIR)
 add_library(libjson INTERFACE)
-target_include_directories(libjson SYSTEM INTERFACE ${SOURCE_DIR}/include)
+target_include_directories(libjson SYSTEM INTERFACE
+    $<BUILD_INTERFACE:${SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include/ngraph>
+    )
 add_dependencies(libjson ext_json)
+install(TARGETS libjson
+    DESTINATION ${NGRAPH_INSTALL_LIB}
+    EXPORT ngraph-targets)
