@@ -66,6 +66,3 @@ target_include_directories(libjson SYSTEM INTERFACE
     $<INSTALL_INTERFACE:include/ngraph>
     )
 add_dependencies(libjson ext_json)
-install(TARGETS libjson
-    DESTINATION ${NGRAPH_INSTALL_LIB}
-    EXPORT ngraph-targets)
