@@ -14,7 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/interpreter/int_backend.hpp"
+#include <functional>
+#include <unordered_map>
+
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/select.hpp"
@@ -22,10 +24,160 @@
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/interpreter/exec_node.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/util.hpp"
+
+#include "op/abs.hpp"
+#include "op/acos.hpp"
+#include "op/add.hpp"
+#include "op/allreduce.hpp"
+#include "op/and.hpp"
+#include "op/asin.hpp"
+#include "op/atan.hpp"
+#include "op/avg_pool.hpp"
+#include "op/batch_norm.hpp"
+#include "op/broadcast.hpp"
+#include "op/ceiling.hpp"
+#include "op/concat.hpp"
+#include "op/constant.hpp"
+#include "op/convert.hpp"
+#include "op/convolution.hpp"
+#include "op/cos.hpp"
+#include "op/cosh.hpp"
+#include "op/divide.hpp"
+#include "op/dot.hpp"
+#include "op/equal.hpp"
+#include "op/exp.hpp"
+#include "op/floor.hpp"
+#include "op/function_call.hpp"
+#include "op/get_output_element.hpp"
+#include "op/greater.hpp"
+#include "op/greater_eq.hpp"
+#include "op/less.hpp"
+#include "op/less_eq.hpp"
+#include "op/log.hpp"
+#include "op/max.hpp"
+#include "op/max_pool.hpp"
+#include "op/maximum.hpp"
+#include "op/min.hpp"
+#include "op/minimum.hpp"
+#include "op/multiply.hpp"
+#include "op/negative.hpp"
+#include "op/not.hpp"
+#include "op/not_equal.hpp"
+#include "op/one_hot.hpp"
+#include "op/or.hpp"
+#include "op/pad.hpp"
+#include "op/parameter.hpp"
+#include "op/power.hpp"
+#include "op/product.hpp"
+#include "op/reduce.hpp"
+#include "op/reduce_window.hpp"
+#include "op/relu.hpp"
+#include "op/remainder.hpp"
+#include "op/replace_slice.hpp"
+#include "op/reshape.hpp"
+#include "op/result.hpp"
+#include "op/reverse.hpp"
+#include "op/reverse_sequence.hpp"
+#include "op/select.hpp"
+#include "op/select_and_scatter.hpp"
+#include "op/sigmoid.hpp"
+#include "op/sign.hpp"
+#include "op/sin.hpp"
+#include "op/sinh.hpp"
+#include "op/slice.hpp"
+#include "op/softmax.hpp"
+#include "op/sqrt.hpp"
+#include "op/stop_gradient.hpp"
+#include "op/subtract.hpp"
+#include "op/sum.hpp"
+#include "op/tan.hpp"
+#include "op/tanh.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+// #define TI(x) type_index(typeid(x))
+
+// static unordered_map<std::type_index, std::function<runtime::interpreter::ExecNode(const Node*)>>
+//     s_dispatcher = {
+//         {TI(op::Abs), &runtime::interpreter::AbsExec::create},
+//         {TI(op::Acos), &runtime::interpreter::AcosExec::create},
+//         {TI(op::Add), &runtime::interpreter::AddExec::create},
+//         {TI(op::AllReduce), &runtime::interpreter::AllReduceExec::create},
+//         {TI(op::And), &runtime::interpreter::AndExec::create},
+//         {TI(op::Asin), &runtime::interpreter::AsinExec::create},
+//         {TI(op::Atan), &runtime::interpreter::AtanExec::create},
+//         {TI(op::AvgPool), &runtime::interpreter::AvgPoolExec::create},
+//         // {TI(op::AvgPoolBackprop), &runtime::interpreter::AvgPoolBackpropExec::create},
+//         {TI(op::BatchNorm), &runtime::interpreter::BatchNormExec::create},
+//         // {TI(op::BatchNormBackprop), &runtime::interpreter::BatchNormBackpropExec::create},
+//         {TI(op::Broadcast), &runtime::interpreter::BroadcastExec::create},
+//         {TI(op::Ceiling), &runtime::interpreter::CeilingExec::create},
+//         {TI(op::Concat), &runtime::interpreter::ConcatExec::create},
+//         {TI(op::Constant), &runtime::interpreter::ConstantExec::create},
+//         {TI(op::Convert), &runtime::interpreter::ConvertExec::create},
+//         {TI(op::Convolution), &runtime::interpreter::ConvolutionExec::create},
+//         // {TI(op::ConvolutionBackpropData),
+//         //  &runtime::interpreter::ConvolutionBackpropDataExec::create},
+//         // {TI(op::ConvolutionBackpropFilters),
+//         //  &runtime::interpreter::ConvolutionBackpropFiltersExec::create},
+//         {TI(op::Cos), &runtime::interpreter::CosExec::create},
+//         {TI(op::Cosh), &runtime::interpreter::CoshExec::create},
+//         {TI(op::Divide), &runtime::interpreter::DivideExec::create},
+//         {TI(op::Dot), &runtime::interpreter::DotExec::create},
+//         {TI(op::Equal), &runtime::interpreter::EqualExec::create},
+//         {TI(op::Exp), &runtime::interpreter::ExpExec::create},
+//         {TI(op::Floor), &runtime::interpreter::FloorExec::create},
+//         {TI(op::FunctionCall), &runtime::interpreter::FunctionCallExec::create},
+//         {TI(op::GetOutputElement), &runtime::interpreter::GetOutputElementExec::create},
+//         {TI(op::Greater), &runtime::interpreter::GreaterExec::create},
+//         {TI(op::GreaterEq), &runtime::interpreter::GreaterEqExec::create},
+//         {TI(op::Less), &runtime::interpreter::LessExec::create},
+//         {TI(op::LessEq), &runtime::interpreter::LessEqExec::create},
+//         {TI(op::Log), &runtime::interpreter::LogExec::create},
+//         {TI(op::Max), &runtime::interpreter::MaxExec::create},
+//         {TI(op::Maximum), &runtime::interpreter::MaximumExec::create},
+//         {TI(op::MaxPool), &runtime::interpreter::MaxPoolExec::create},
+//         // {TI(op::MaxPoolBackprop), &runtime::interpreter::MaxPoolBackpropExec::create},
+//         {TI(op::Min), &runtime::interpreter::MinExec::create},
+//         {TI(op::Minimum), &runtime::interpreter::MinimumExec::create},
+//         {TI(op::Multiply), &runtime::interpreter::MultiplyExec::create},
+//         {TI(op::Negative), &runtime::interpreter::NegativeExec::create},
+//         {TI(op::Not), &runtime::interpreter::NotExec::create},
+//         {TI(op::NotEqual), &runtime::interpreter::NotEqualExec::create},
+//         {TI(op::OneHot), &runtime::interpreter::OneHotExec::create},
+//         {TI(op::Or), &runtime::interpreter::OrExec::create},
+//         {TI(op::Pad), &runtime::interpreter::PadExec::create},
+//         {TI(op::Parameter), &runtime::interpreter::ParameterExec::create},
+//         {TI(op::Power), &runtime::interpreter::PowerExec::create},
+//         {TI(op::Product), &runtime::interpreter::ProductExec::create},
+//         {TI(op::Reduce), &runtime::interpreter::ReduceExec::create},
+//         {TI(op::ReduceWindow), &runtime::interpreter::ReduceWindowExec::create},
+//         {TI(op::Relu), &runtime::interpreter::ReluExec::create},
+//         // {TI(op::ReluBackprop), &runtime::interpreter::ReluBackpropExec::create},
+//         {TI(op::Remainder), &runtime::interpreter::RemainderExec::create},
+//         {TI(op::ReplaceSlice), &runtime::interpreter::ReplaceSliceExec::create},
+//         {TI(op::Reshape), &runtime::interpreter::ReshapeExec::create},
+//         {TI(op::Result), &runtime::interpreter::ResultExec::create},
+//         {TI(op::Reverse), &runtime::interpreter::ReverseExec::create},
+//         {TI(op::ReverseSequence), &runtime::interpreter::ReverseSequenceExec::create},
+//         {TI(op::Select), &runtime::interpreter::SelectExec::create},
+//         {TI(op::SelectAndScatter), &runtime::interpreter::SelectAndScatterExec::create},
+//         {TI(op::Sigmoid), &runtime::interpreter::SigmoidExec::create},
+//         // {TI(op::SigmoidBackprop), &runtime::interpreter::SigmoidBackpropExec::create},
+//         {TI(op::Sign), &runtime::interpreter::SignExec::create},
+//         {TI(op::Sin), &runtime::interpreter::SinExec::create},
+//         {TI(op::Sinh), &runtime::interpreter::SinhExec::create},
+//         {TI(op::Slice), &runtime::interpreter::SliceExec::create},
+//         {TI(op::Softmax), &runtime::interpreter::SoftmaxExec::create},
+//         {TI(op::Sqrt), &runtime::interpreter::SqrtExec::create},
+//         {TI(op::StopGradient), &runtime::interpreter::StopGradientExec::create},
+//         {TI(op::Subtract), &runtime::interpreter::SubtractExec::create},
+//         {TI(op::Sum), &runtime::interpreter::SumExec::create},
+//         {TI(op::Tan), &runtime::interpreter::TanExec::create}};
 
 using descriptor::layout::DenseTensorViewLayout;
 
@@ -66,6 +218,10 @@ bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
         pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
         pass_manager.register_pass<pass::Liveness>();
         pass_manager.run_passes(function);
+        for (shared_ptr<Node> node : function->get_ordered_ops())
+        {
+            instance.m_ops.push_back(ExecNode::create_exec(node));
+        }
     }
 
     return true;
@@ -123,8 +279,9 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     }
 
     // for each ordered op in the graph
-    for (shared_ptr<Node> op : function->get_ordered_ops())
+    for (const shared_ptr<ExecNode>& exec_op : instance.m_ops)
     {
+        shared_ptr<Node> op = exec_op->get_node();
         if (op->description() == "Parameter")
         {
             continue;
@@ -183,7 +340,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
             instance.m_timer_map[op.get()].start();
         }
-        generate_calls(type, *op, op_outputs, op_inputs);
+        generate_calls(type, *exec_op, op_outputs, op_inputs);
         if (instance.m_performance_counters_enabled)
         {
             instance.m_timer_map[op.get()].stop();
@@ -210,9 +367,19 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     return true;
 }
 
+// ngraph::runtime::interpreter::ExecNode wrap_op(Node& op)
+// {
+//     auto handler = s_dispatcher.find(type_index(typeid(op)));
+//     if (handler == s_dispatcher.end())
+//     {
+//         throw ngraph_error("Unhandled op during execution : " + op.description());
+//     }
+//     return handler->second(&op);
+// }
+
 void runtime::interpreter::INTBackend::generate_calls(
     const element::Type& type,
-    Node& op,
+    ExecNode& op,
     const vector<shared_ptr<HostTensorView>>& outputs,
     const vector<shared_ptr<HostTensorView>>& inputs)
 {
@@ -263,7 +430,7 @@ void runtime::interpreter::INTBackend::generate_calls(
     else
     {
         stringstream ss;
-        ss << "unsupported element type " << type << " op " << op.get_name();
+        ss << "unsupported element type " << type << " op " << op.get_node()->get_name();
         throw ngraph_error(ss.str());
     }
 }
