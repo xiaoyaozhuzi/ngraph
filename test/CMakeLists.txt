@@ -16,14 +16,17 @@
 
 set(SRC
     algebraic_simplification.cpp
+    assertion.cpp
     builder_autobroadcast.cpp
     build_graph.cpp
+    constant_folding.cpp
     copy.cpp
     core_fusion.cpp
     cpio.cpp
     cse.cpp
     element_type.cpp
     file_util.cpp
+    all_close_f.cpp
     inliner.cpp
     input_output_assign.cpp
     main.cpp
@@ -52,6 +55,14 @@ add_subdirectory(models)
 add_subdirectory(files)
 add_subdirectory(util)
 
+if(NGRAPH_CPU_ENABLE)
+    set(SRC ${SRC} backend_performance.cpp codegen.cpp cpu_fusion.cpp cpu_test.cpp)
+endif()
+
+if(NGRAPH_GPU_ENABLE)
+    set(SRC ${SRC} cudnn.cpp gpu_test.cpp)
+endif()
+
 foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
     string(FIND ${TEST_CONFIG} "@" OFFSET)
     string(SUBSTRING ${TEST_CONFIG} 0 ${OFFSET} BACKEND_NAME)
@@ -60,11 +71,11 @@ foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
 
     configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
     configure_file(convolution_test.in.cpp convolution_test_${BACKEND_NAME}.cpp)
-    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp)
-    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/convolution_test_${BACKEND_NAME}.cpp)
+    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp ${SRC})
+    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/convolution_test_${BACKEND_NAME}.cpp ${SRC})
     if(NGRAPH_DISTRIBUTED_ENABLE)
         configure_file(distributed.cpp distributed_${BACKEND_NAME}.cpp)
-        set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp)
+        set(SRC ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp  ${SRC})
     endif()
 
     # Some---but not all---autodiff tests go through multiple iterations with
@@ -79,7 +90,7 @@ foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
     endif()
 
     configure_file(autodiff.in.cpp autodiff_${BACKEND_NAME}.cpp)
-    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp)
+    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp ${SRC})
 
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()
@@ -110,6 +121,11 @@ target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
     target_link_libraries(unit-test cpu_backend interpreter_backend)
+    target_link_libraries(unit-test libmkldnn)
+endif()
+
+if (NGRAPH_TBB_ENABLE)
+    add_definitions(-DNGRAPH_TBB_ENABLE)
 endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
@@ -126,8 +142,8 @@ add_custom_target(style-check
 )
 
 add_custom_target(unit-test-check
-	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
-	DEPENDS unit-test
+    COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+    DEPENDS unit-test
 )
 
 add_custom_target(check

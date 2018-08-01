@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/node_vector.hpp"
+
 namespace ngraph
 {
     class Node;
@@ -108,6 +110,7 @@ namespace ngraph
     void dump(std::ostream& out, const void*, size_t);
 
     std::string to_lower(const std::string& s);
+    std::string to_upper(const std::string& s);
     std::string trim(const std::string& s);
     std::vector<std::string> split(const std::string& s, char delimiter, bool trim = false);
 
@@ -259,7 +262,7 @@ namespace ngraph
     * The last argument is the adjoints coming into the bprop function, the output
     * bprop function will have these nodes as the first N input parameters
     **/
-    FpropCache cache_fprop(std::shared_ptr<Function> fprop,
-                           std::shared_ptr<Function> bprop,
-                           std::vector<std::shared_ptr<Node>> adjoints);
+    FpropCache cache_fprop(std::shared_ptr<Function> fprop, std::shared_ptr<Function> bprop);
 } // end namespace ngraph
+
+std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

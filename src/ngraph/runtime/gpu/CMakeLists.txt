@@ -19,29 +19,31 @@ include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
 # Add sources for the GPU backend
 # and all its dependencies
 set(SRC
-    gpu_call_frame.cpp
+    cuda_emitter.cpp
+    cudnn_emitter.cpp
     gpu_backend.cpp
-    gpu_emitter.cpp
-    gpu_external_function.cpp
-    gpu_kernel_emitters.cpp
-    gpu_tensor_view.cpp
-    gpu_tensor_view_wrapper.cpp
-    gpu_util.cpp
-    gpu_cuda_kernel_emitters.cpp
-    gpu_cuda_kernel_builder.cpp
+    gpu_call_frame.cpp
+    gpu_cuda_context_manager.cpp
     gpu_cuda_function_builder.cpp
     gpu_cuda_function_pool.cpp
-    gpu_cuda_context_manager.cpp
-    gpu_runtime_context.cpp
-    gpu_primitive_emitter.cpp
+    gpu_cuda_kernel_builder.cpp
+    gpu_cuda_kernel_emitters.cpp
+    gpu_emitter.cpp
+    gpu_external_function.cpp
     gpu_invoke.cpp
-    cudnn_emitter.cpp
-    cuda_emitter.cpp
+    gpu_kernel_emitters.cpp
+	gpu_memory_manager.cpp
+    gpu_primitive_emitter.cpp
+    gpu_runtime_context.cpp
+    gpu_tensor_view_wrapper.cpp
+    gpu_tensor_view.cpp
+    gpu_util.cpp
     type_info.cpp
     )
 
 if (NGRAPH_GPU_ENABLE)
     add_library(gpu_backend SHARED ${SRC})
+    set_target_properties(gpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
     target_link_libraries(gpu_backend PUBLIC ngraph codegen)
     find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
     find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
@@ -54,6 +56,7 @@ if (NGRAPH_GPU_ENABLE)
         ${CUDA_LIBRARIES}
         ${CUDA_CUBLAS_LIBRARIES}
         ${CUDNN_LIBRARIES})
+    set_target_properties(gpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS gpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

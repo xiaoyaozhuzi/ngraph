@@ -93,6 +93,13 @@ std::string ngraph::to_lower(const std::string& s)
     return rc;
 }
 
+std::string ngraph::to_upper(const std::string& s)
+{
+    std::string rc = s;
+    std::transform(rc.begin(), rc.end(), rc.begin(), ::toupper);
+    return rc;
+}
+
 string ngraph::trim(const string& s)
 {
     string rc = s;
@@ -185,8 +192,7 @@ size_t ngraph::round_up(size_t size, size_t alignment)
 }
 
 ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
-                                       std::shared_ptr<ngraph::Function> bprop,
-                                       std::vector<std::shared_ptr<Node>> adjoints)
+                                       std::shared_ptr<ngraph::Function> bprop)
 {
     using namespace ngraph;
 
@@ -208,17 +214,21 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // shape and element type as the nodes in fprop
     FpropCache fprop_cache;
     fprop_cache.node_param_map = std::make_shared<NodeMap>();
-    ngraph::traverse_nodes(fprop, [&fprop_cache, &in_bprop](std::shared_ptr<Node> node) {
-        if (in_bprop.count(node) != 0)
-        {
-            fprop_cache.node_param_map->add(
-                node, std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape()));
-        }
-    });
+    auto bprop_inputs = bprop->get_parameters();
+
+    ngraph::traverse_nodes(
+        fprop, [&fprop_cache, &in_bprop, &bprop_inputs](std::shared_ptr<Node> node) {
+            if (in_bprop.count(node) != 0 &&
+                std::find(bprop_inputs.begin(), bprop_inputs.end(), node) == bprop_inputs.end())
+            {
+                fprop_cache.node_param_map->add(
+                    node,
+                    std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape()));
+            }
+        });
 
     // Find all of the nodes that are intermediate values of fprop and used in
-    // bprop
-    // and store those nodes that aren't needed in bprop
+    // bprop and store those nodes that aren't needed in bprop
     std::vector<std::shared_ptr<Node>> unused_nodes;
     for (auto kv : fprop_cache.node_param_map->get_node_map())
     {
@@ -262,7 +272,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
 
     // get clone bprop parameters
     op::ParameterVector bprop_input_params;
-    for (auto param : adjoints)
+    for (auto param : bprop_inputs)
     {
         bprop_input_params.push_back(
             std::dynamic_pointer_cast<op::Parameter>(fprop_cache.node_param_map->get(param)));
@@ -365,4 +375,15 @@ namespace ngraph
         }
         return result;
     }
+}
+
+std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv)
+{
+    std::vector<std::string> names;
+    for (auto n : nv)
+    {
+        names.push_back(n->get_name());
+    }
+    os << vector_to_string(names);
+    return os;
 }

@@ -16,6 +16,7 @@
 
 set(SRC
     cpu_backend.cpp
+    cpu_builder.cpp
     cpu_call_frame.cpp
     cpu_emitter.cpp
     cpu_external_function.cpp
@@ -26,6 +27,26 @@ set(SRC
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
+    builder/avg_pool.cpp
+    builder/batch_norm.cpp
+    builder/broadcast.cpp
+    builder/concat.cpp
+    builder/convert.cpp
+    builder/convert_layout.cpp
+    builder/convolution.cpp
+    builder/dot.cpp
+    builder/function_call.cpp
+    builder/matmul_bias.cpp
+    builder/max.cpp
+    builder/max_pool.cpp
+    builder/min.cpp
+    builder/reshape.cpp
+    builder/reverse.cpp
+    builder/reverse_sequence.cpp
+    builder/select.cpp
+    builder/select_and_scatter.cpp
+    builder/sigmoid.cpp
+    builder/sum.cpp
     kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
@@ -34,18 +55,27 @@ set(SRC
     mkldnn_emitter.cpp
     mkldnn_invoke.cpp
     mkldnn_utils.cpp
+    op/batch_dot.cpp
     op/batch_norm_relu.cpp
+    op/bounded_relu.cpp
+    op/group_conv.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
+    op/loop_kernel.cpp
+    op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
-    op/sigmoid.cpp
+    op/rnn.cpp
+    op/sigmoid_mul.cpp
     pass/cpu_assignment.cpp
+    pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
     pass/cpu_layout.cpp
     pass/cpu_post_layout_optimizations.cpp
-    pass/cpu_rnn_mat_fusion.cpp
+    pass/cpu_rnn_fusion.cpp
+    pass/cpu_mat_fusion.cpp
+    pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_shuffle_folding.cpp
     pass/cpu_workspace_insertion.cpp
 )
@@ -72,12 +102,18 @@ if (NGRAPH_TBB_ENABLE)
         DESTINATION ${NGRAPH_INSTALL_LIB}
         FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
+    add_library(libtbb INTERFACE)
+    target_link_libraries(libtbb INTERFACE
+        ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
+    )
+    target_include_directories(libtbb SYSTEM INTERFACE ${TBB_ROOT}/include)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
     add_library(cpu_backend SHARED ${SRC})
+    set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
         find_package(MPI REQUIRED)
@@ -87,8 +123,9 @@ if (NGRAPH_CPU_ENABLE)
         target_link_libraries(cpu_backend PRIVATE ${MPI_CXX_LIBRARIES})
     endif()
 
-    target_link_libraries(cpu_backend PUBLIC ngraph codegen libmkldnn libeigen libjson ${TBB_IMPORTED_TARGETS})
+    target_link_libraries(cpu_backend PUBLIC ngraph codegen libmkldnn libeigen libjson libtbb)
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
+    set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

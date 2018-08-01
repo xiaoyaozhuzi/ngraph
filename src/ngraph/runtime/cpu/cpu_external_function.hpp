@@ -17,6 +17,7 @@
 #pragma once
 
 #include <functional>
+#include <list>
 #include <map>
 #include <memory>
 #include <string>
@@ -92,12 +93,31 @@ namespace ngraph
                 const std::string& get_function_name() const { return m_function_name; }
                 const std::shared_ptr<ngraph::Function> get_function() { return m_function; }
                 // Temporary Memory Pool alignment
-                static const size_t s_memory_pool_alignment = 4096;
+                static const size_t s_memory_pool_alignment;
 
+                std::list<std::function<void(CPURuntimeContext*)>>& get_functors()
+                {
+                    return functors;
+                }
+                std::unordered_map<std::string, void*>& get_tensor_data() { return tensor_data; }
+                std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>&
+                    get_executor()
+                {
+                    return executor;
+                }
+                std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>>&
+                    get_callees()
+                {
+                    return callees;
+                }
+                bool is_direct_execution() const { return m_direct_execution; }
             protected:
+                void build();
                 void compile();
 
             private:
+                void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
+                                               std::string output_name);
                 void emit_debug_function_entry(codegen::CodeWriter& writer,
                                                Node* node,
                                                const std::vector<TensorViewWrapper>& in,
@@ -126,6 +146,7 @@ namespace ngraph
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;
                 bool m_use_tbb;
+
                 std::unordered_map<std::string, std::string> m_variable_name_map;
                 std::map<std::string, size_t> m_name_index_map;
 
@@ -142,6 +163,20 @@ namespace ngraph
                 std::unique_ptr<MKLDNNEmitter> m_mkldnn_emitter;
 
                 std::string m_function_name;
+
+                std::list<std::function<void(CPURuntimeContext*)>> functors;
+                std::list<std::pair<std::function<bool(CPURuntimeContext*)>, size_t>> enables;
+                std::list<std::pair<std::function<bool(CPURuntimeContext*)>, std::string>>
+                    enable_nodename_list;
+                std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>
+                    executor;
+                std::unordered_map<std::string, void*> tensor_data;
+                std::unordered_map<std::string, bool> tensor_stale;
+                std::unordered_map<std::string, size_t> intermediates_offsets;
+                std::unordered_map<std::string, size_t> function_input_index, function_output_index;
+                std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
+                bool m_is_built;
+                bool m_direct_execution;
             };
         }
     }

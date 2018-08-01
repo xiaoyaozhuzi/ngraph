@@ -23,9 +23,11 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
@@ -46,6 +48,7 @@ static const std::unordered_set<std::type_index> s_op_registry{
     TI(ngraph::op::AvgPoolBackprop),
     TI(ngraph::op::BatchNorm),
     TI(ngraph::op::BatchNormBackprop),
+    TI(ngraph::op::Concat),
     TI(ngraph::op::Convolution),
     TI(ngraph::op::ConvolutionBackpropData),
     TI(ngraph::op::ConvolutionBackpropFilters),
@@ -55,7 +58,8 @@ static const std::unordered_set<std::type_index> s_op_registry{
     TI(ngraph::op::MaxPool),
     TI(ngraph::op::MaxPoolBackprop),
     TI(ngraph::op::Relu),
-    TI(ngraph::op::ReluBackprop)};
+    TI(ngraph::op::ReluBackprop),
+    TI(ngraph::op::Reshape)};
 
 // Mapping from POD types to MKLDNN data types
 static const std::map<element::Type, const mkldnn::memory::data_type> s_mkldnn_data_type_map{
@@ -96,11 +100,21 @@ static const std::map<memory::format, const std::string> s_mkldnn_format_string_
     {memory::format::chwn, "memory::format::chwn"},
     {memory::format::nChw8c, "memory::format::nChw8c"},
     {memory::format::nChw16c, "memory::format::nChw16c"},
+    {memory::format::ncdhw, "memory::format::ndhwc"},
+    {memory::format::ncdhw, "memory::format::ndhwc"},
+    {memory::format::nCdhw16c, "memory::format::nCdhw16c"},
     {memory::format::oi, "memory::format::oi"},
     {memory::format::io, "memory::format::io"},
     {memory::format::oihw, "memory::format::oihw"},
     {memory::format::ihwo, "memory::format::ihwo"},
     {memory::format::hwio, "memory::format::hwio"},
+    // TODO (nishant): Uncomment after the next release of mkl-dnn"
+    //{memory::format::dhwio, "memory::format::dhwio"},
+    {memory::format::oidhw, "memory::format::oidhw"},
+    {memory::format::OIdhw16i16o, "memory::format::OIdhw16i16o"},
+    {memory::format::OIdhw16o16i, "memory::format::OIdhw16o16i"},
+    {memory::format::Oidhw16o, "memory::format::Oidhw16o"},
+    {memory::format::Odhwi16o, "memory::format::Odhwi16o"},
     {memory::format::oIhw8i, "memory::format::oIhw8i"},
     {memory::format::oIhw16i, "memory::format::oIhw16i"},
     {memory::format::OIhw8i8o, "memory::format::OIhw8i8o"},
@@ -113,12 +127,23 @@ static const std::map<memory::format, const std::string> s_mkldnn_format_string_
     {memory::format::Ohwi8o, "memory::format::Ohwi8o"},
     {memory::format::Ohwi16o, "memory::format::Ohwi16o"},
     {memory::format::OhIw16o4i, "memory::format::OhIw16o4i"},
+    {memory::format::tnc, "memory::format::tnc"},
+    {memory::format::ldsnc, "memory::format::ldsnc"},
+    {memory::format::ldigo, "memory::format::ldigo"},
+    {memory::format::ldgo, "memory::format::ldgo"},
 };
 
 static const std::set<memory::format> s_filter_formats{
     memory::format::oihw,
     memory::format::ihwo,
     memory::format::hwio,
+    // TODO (nishant): Uncomment after the next release of mkl-dnn"
+    //memory::format::dhwio,
+    memory::format::oidhw,
+    memory::format::OIdhw16i16o,
+    memory::format::OIdhw16o16i,
+    memory::format::Oidhw16o,
+    memory::format::Odhwi16o,
     // memory::format::oIhw8i,             // These currently map to nChw8c and nChw16c
     // memory::format::oIhw16i,
     memory::format::OIhw8i8o,
@@ -140,11 +165,17 @@ bool runtime::cpu::mkldnn_utils::IsMKLDNNOp(ngraph::Node& op)
 mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
     const ngraph::runtime::cpu::LayoutDescriptor& layout)
 {
-    switch (layout.get_shape().size())
+    return CreateNativeDataFormat(layout.get_shape());
+}
+
+mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(const Shape& shape)
+{
+    switch (shape.size())
     {
     case 1: return mkldnn::memory::format::x;
     case 2: return mkldnn::memory::format::nc;
     case 4: return mkldnn::memory::format::nchw;
+    case 5: return mkldnn::memory::format::ncdhw;
     default: return mkldnn::memory::format::format_undef;
     }
 }

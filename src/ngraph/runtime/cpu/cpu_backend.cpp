@@ -14,8 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include <tbb/tbb_stddef.h>
+
 #include "ngraph/graph_util.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
@@ -24,13 +26,22 @@
 using namespace ngraph;
 using namespace std;
 
-static bool static_init()
+extern "C" const char* get_ngraph_version_string()
 {
-    runtime::Backend::register_backend("CPU", make_shared<runtime::cpu::CPU_Backend>());
-    return true;
-};
+    return NGRAPH_VERSION;
+}
 
-bool runtime::cpu::CPU_Backend::init = static_init();
+extern "C" runtime::Backend* new_backend(const char* configuration_string)
+{
+    // Force TBB to link to the backend
+    tbb::TBB_runtime_interface_version();
+    return new runtime::cpu::CPU_Backend();
+}
+
+extern "C" void delete_backend(runtime::Backend* backend)
+{
+    delete backend;
+}
 
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function)

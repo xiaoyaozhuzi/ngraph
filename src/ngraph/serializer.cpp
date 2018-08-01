@@ -72,8 +72,10 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
@@ -96,16 +98,7 @@ using const_data_callback_t = shared_ptr<Node>(const string&, const element::Typ
 template <typename T>
 T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
 {
-    T rc;
-    try
-    {
-        rc = j.at(key).get<T>();
-    }
-    catch (...)
-    {
-        rc = default_value;
-    }
-    return rc;
+    return j.count(key) != 0 ? j.at(key).get<T>() : default_value;
 }
 
 static std::shared_ptr<ngraph::Function>
@@ -213,17 +206,10 @@ std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t ind
 
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 {
-    std::stringstream ss;
-    ss << in.rdbuf();
-    return deserialize(ss.str());
-}
-
-shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
-{
     shared_ptr<Function> rc;
-    if (file_util::exists(s))
+    if (cpio::is_cpio(in))
     {
-        cpio::Reader reader(s);
+        cpio::Reader reader(in);
         vector<cpio::FileInfo> file_info = reader.get_file_info();
         if (file_info.size() > 0)
         {
@@ -258,6 +244,25 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
                 rc = f;
             }
         }
+    }
+    else
+    {
+        // json file?
+        std::stringstream ss;
+        ss << in.rdbuf();
+        rc = deserialize(ss.str());
+    }
+    return rc;
+}
+
+shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
+{
+    shared_ptr<Function> rc;
+    if (file_util::exists(s))
+    {
+        // s is a file and not a json string
+        ifstream in(s, ios_base::binary | ios_base::in);
+        rc = deserialize(in);
     }
     else
     {
@@ -803,6 +808,13 @@ static shared_ptr<ngraph::Function>
                 auto reversed_axes = node_js.at("reversed_axes").get<set<size_t>>();
                 node = make_shared<op::Reverse>(args[0], reversed_axes);
             }
+            else if (node_op == "ReverseSequence")
+            {
+                auto batch_axis = node_js.at("batch_axis").get<size_t>();
+                auto sequence_axis = node_js.at("sequence_axis").get<size_t>();
+                node =
+                    make_shared<op::ReverseSequence>(args[0], args[1], batch_axis, sequence_axis);
+            }
             else if (node_op == "Select")
             {
                 node = make_shared<op::Select>(args[0], args[1], args[2]);
@@ -826,6 +838,14 @@ static shared_ptr<ngraph::Function>
                                                          window_shape,
                                                          window_movement_strides);
             }
+            else if (node_op == "Sigmoid")
+            {
+                node = make_shared<op::Sigmoid>(args[0]);
+            }
+            else if (node_op == "SigmoidBackprop")
+            {
+                node = make_shared<op::SigmoidBackprop>(args[0], args[1]);
+            }
             else if (node_op == "Sign")
             {
                 node = make_shared<op::Sign>(args[0]);
@@ -847,8 +867,8 @@ static shared_ptr<ngraph::Function>
             }
             else if (node_op == "Softmax")
             {
-                auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
-                node = make_shared<op::Softmax>(args[0], reduction_axes);
+                auto softmax_axes = node_js.at("softmax_axes").get<set<size_t>>();
+                node = make_shared<op::Softmax>(args[0], softmax_axes);
             }
             else if (node_op == "Sqrt")
             {
@@ -1182,6 +1202,7 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::Parameter*>(&n);
         node["shape"] = tmp->get_shape();
+        node["cacheable"] = tmp->get_cacheable();
         node["element_type"] = write_element_type(tmp->get_element_type());
     }
     else if (node_op == "Product")
@@ -1235,6 +1256,12 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::Reverse*>(&n);
         node["reversed_axes"] = tmp->get_reversed_axes();
     }
+    else if (node_op == "ReverseSequence")
+    {
+        auto tmp = dynamic_cast<const op::ReverseSequence*>(&n);
+        node["batch_axis"] = tmp->get_batch_axis();
+        node["sequence_axis"] = tmp->get_sequence_axis();
+    }
     else if (node_op == "Select")
     {
     }
@@ -1245,6 +1272,12 @@ static json write(const Node& n, bool binary_constant_data)
         node["scatter_function"] = tmp->get_functions()[1]->get_name();
         node["window_shape"] = tmp->get_window_shape();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
+    }
+    else if (node_op == "Sigmoid")
+    {
+    }
+    else if (node_op == "SigmoidBackprop")
+    {
     }
     else if (node_op == "Sign")
     {
@@ -1272,6 +1305,11 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::Sum*>(&n);
         node["reduction_axes"] = tmp->get_reduction_axes();
+    }
+    else if (node_op == "Softmax")
+    {
+        auto tmp = dynamic_cast<const op::Softmax*>(&n);
+        node["softmax_axes"] = tmp->get_axes();
     }
     else if (node_op == "Tan")
     {

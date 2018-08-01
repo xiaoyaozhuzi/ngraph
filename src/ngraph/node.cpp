@@ -16,6 +16,7 @@
 
 #include "ngraph/node.hpp"
 #include <memory>
+#include <sstream>
 #include <typeindex>
 #include <typeinfo>
 
@@ -138,7 +139,7 @@ void Node::set_placement(Placement placement)
     m_placement = placement;
 }
 
-std::shared_ptr<Node> Node::get_argument(size_t index)
+std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     for (auto& i : get_inputs())
     {
@@ -158,7 +159,7 @@ Node::~Node()
     }
 }
 
-NodeVector Node::get_arguments()
+NodeVector Node::get_arguments() const
 {
     NodeVector result;
     for (auto& i : get_inputs())
@@ -328,4 +329,12 @@ NodeVector Node::get_users() const
     }
 
     return result;
+}
+
+std::string ngraph::type_check_assert_string(const Node* node)
+{
+    std::stringstream ss;
+    ss << "While type-checking node '" << node->get_name() << "' of type '" << node->description()
+       << "'";
+    return ss.str();
 }
