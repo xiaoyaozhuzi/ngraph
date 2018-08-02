@@ -21,7 +21,7 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        Graph::Graph(const onnx::GraphProto& graph_proto)
+        Graph::Graph(const onnx_ng::GraphProto& graph_proto)
             : m_graph_proto(graph_proto)
         {
             for (const auto& tensor : m_graph_proto.initializer())

@@ -23,7 +23,7 @@
 
 #include "ngraph/op/parameter_vector.hpp"
 
-#include "onnx.pb.h"
+#include "onnx_ng.pb.h"
 #include "value_info.hpp"
 
 namespace ngraph
@@ -33,7 +33,7 @@ namespace ngraph
         class Graph
         {
         public:
-            explicit Graph(const onnx::GraphProto& proto);
+            explicit Graph(const onnx_ng::GraphProto& proto);
 
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
@@ -46,7 +46,7 @@ namespace ngraph
 
             const std::string& get_name() const { return m_graph_proto.name(); }
         private:
-            const onnx::GraphProto& m_graph_proto;
+            const onnx_ng::GraphProto& m_graph_proto;
             std::vector<Node> m_nodes;
             std::vector<ValueInfo> m_inputs;
             std::vector<ValueInfo> m_outputs;

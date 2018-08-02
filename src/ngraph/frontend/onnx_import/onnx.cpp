@@ -52,7 +52,7 @@ namespace ngraph
 
         std::vector<std::shared_ptr<Function>> load_onnx_model(std::istream& sin)
         {
-            onnx::ModelProto model_proto;
+            onnx_ng::ModelProto model_proto;
             if (!model_proto.ParseFromIstream(&sin))
             {
                 throw detail::error::stream_parse{sin};

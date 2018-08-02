@@ -18,35 +18,40 @@ set(SOURCE_URL "https://raw.githubusercontent.com/onnx/onnx/v1.1.2/onnx")
 set(ONNX_URL "${SOURCE_URL}/onnx.proto")
 set(OPERATORS_URL "${SOURCE_URL}/onnx-operators.proto")
 
-set_source_files_properties(onnx.pb.h onnx.pb.cc onnx-operators.pb.h onnx-operators.pb.cc PROPERTIES GENERATED TRUE)
+set_source_files_properties(onnx_ng.pb.h onnx_ng.pb.cc onnx-operators_ng.pb.h onnx-operators_ng.pb.cc PROPERTIES GENERATED TRUE)
 
-if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/onnx_ng.proto")
+if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/onnx.proto")
     file(DOWNLOAD ${ONNX_URL} ${CMAKE_CURRENT_BINARY_DIR}/onnx_ng.proto)
 endif()
 
-if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/onnx-operators_ng.proto")
+if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/onnx-operators.proto")
     file(DOWNLOAD ${OPERATORS_URL} ${CMAKE_CURRENT_BINARY_DIR}/onnx-operators_ng.proto)
 endif()
 
-add_custom_command(OUTPUT onnx.pb.cc onnx.pb.h
+add_custom_command(OUTPUT onnx_ng.pb.cc onnx_ng.pb.h
+    COMMAND bash -c "sed -i 's/package onnx/package onnx_ng/' onnx_ng.proto"
     COMMAND ${PROTOBUF_PROTOC_EXECUTABLE} --cpp_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/onnx_ng.proto
-    DEPENDS onnx_ng.proto)
+    DEPENDS onnx_ng.proto
+    )
 
-add_custom_command(OUTPUT onnx-operators.pb.cc onnx-operators.pb.h
+add_custom_command(OUTPUT onnx-operators_ng.pb.cc onnx-operators_ng.pb.h
+    COMMAND bash -c "sed -i 's/onnx/onnx_ng/g' onnx-operators_ng.proto"
     COMMAND ${PROTOBUF_PROTOC_EXECUTABLE} --cpp_out ${CMAKE_CURRENT_BINARY_DIR} --proto_path ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/onnx-operators_ng.proto
-    DEPENDS onnx-operators_ng.proto)
+    COMMAND sed -i 's/::onnx::/::onnx_ng::/' onnx-operators_ng.pb.cc
+    DEPENDS onnx-operators_ng.proto
+    )
 
 add_library(onnx_import_interface OBJECT
     onnx.cpp
     onnx.hpp
-    onnx.pb.h
-    onnx-operators.pb.h
+    onnx_ng.pb.h
+    onnx-operators_ng.pb.h
     onnx_ng.proto
     onnx-operators_ng.proto)
 
 add_library(onnx_import STATIC
-    onnx.pb.cc
-    onnx-operators.pb.cc
+    onnx_ng.pb.cc
+    onnx-operators_ng.pb.cc
     attribute.cpp
     attribute.hpp
     graph.cpp

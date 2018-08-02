@@ -21,7 +21,7 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
-#include "onnx.pb.h"
+#include "onnx_ng.pb.h"
 
 namespace ngraph
 {
@@ -33,18 +33,18 @@ namespace ngraph
             {
                 struct invalid_data_type : ngraph_error
                 {
-                    explicit invalid_data_type(onnx::TensorProto_DataType type)
+                    explicit invalid_data_type(onnx_ng::TensorProto_DataType type)
                         : ngraph_error{"invalid data type: " +
-                                       onnx::TensorProto_DataType_Name(type)}
+                                       onnx_ng::TensorProto_DataType_Name(type)}
                     {
                     }
                 };
 
                 struct unsupported_data_type : ngraph_error
                 {
-                    explicit unsupported_data_type(onnx::TensorProto_DataType type)
+                    explicit unsupported_data_type(onnx_ng::TensorProto_DataType type)
                         : ngraph_error{"unsupported data type: " +
-                                       onnx::TensorProto_DataType_Name(type)}
+                                       onnx_ng::TensorProto_DataType_Name(type)}
                     {
                     }
                 };
@@ -86,32 +86,32 @@ namespace ngraph
                 }
 
                 template <typename T>
-                inline std::vector<T> get_data(const onnx::TensorProto& tensor)
+                inline std::vector<T> get_data(const onnx_ng::TensorProto& tensor)
                 {
                     throw error::tensor::unsupported_data_type{tensor.data_type()};
                 }
 
                 template <>
-                inline std::vector<double> get_data(const onnx::TensorProto& tensor)
+                inline std::vector<double> get_data(const onnx_ng::TensorProto& tensor)
                 {
-                    if (tensor.data_type() == onnx::TensorProto_DataType_DOUBLE)
+                    if (tensor.data_type() == onnx_ng::TensorProto_DataType_DOUBLE)
                     {
                         return detail::__get_data<double>(tensor.double_data());
                     }
-                    if ((tensor.data_type() == onnx::TensorProto_DataType_FLOAT) or
-                        (tensor.data_type() == onnx::TensorProto_DataType_FLOAT16))
+                    if ((tensor.data_type() == onnx_ng::TensorProto_DataType_FLOAT) or
+                        (tensor.data_type() == onnx_ng::TensorProto_DataType_FLOAT16))
                     {
                         return detail::__get_data<double>(tensor.float_data());
                     }
-                    if (tensor.data_type() == onnx::TensorProto_DataType_INT32)
+                    if (tensor.data_type() == onnx_ng::TensorProto_DataType_INT32)
                     {
                         return detail::__get_data<double>(tensor.int32_data());
                     }
-                    if (tensor.data_type() == onnx::TensorProto_DataType_INT64)
+                    if (tensor.data_type() == onnx_ng::TensorProto_DataType_INT64)
                     {
                         return detail::__get_data<double>(tensor.int64_data());
                     }
-                    if (tensor.data_type() == onnx::TensorProto_DataType_UINT64)
+                    if (tensor.data_type() == onnx_ng::TensorProto_DataType_UINT64)
                     {
                         return detail::__get_data<double>(tensor.uint64_data());
                     }
@@ -119,22 +119,22 @@ namespace ngraph
                 }
 
                 template <>
-                inline std::vector<float> get_data(const onnx::TensorProto& tensor)
+                inline std::vector<float> get_data(const onnx_ng::TensorProto& tensor)
                 {
-                    if ((tensor.data_type() == onnx::TensorProto_DataType_FLOAT) or
-                        (tensor.data_type() == onnx::TensorProto_DataType_FLOAT16))
+                    if ((tensor.data_type() == onnx_ng::TensorProto_DataType_FLOAT) or
+                        (tensor.data_type() == onnx_ng::TensorProto_DataType_FLOAT16))
                     {
                         return detail::__get_data<float>(tensor.float_data());
                     }
-                    if (tensor.data_type() == onnx::TensorProto_DataType_INT32)
+                    if (tensor.data_type() == onnx_ng::TensorProto_DataType_INT32)
                     {
                         return detail::__get_data<float>(tensor.int32_data());
                     }
-                    if (tensor.data_type() == onnx::TensorProto_DataType_INT64)
+                    if (tensor.data_type() == onnx_ng::TensorProto_DataType_INT64)
                     {
                         return detail::__get_data<float>(tensor.int64_data());
                     }
-                    if (tensor.data_type() == onnx::TensorProto_DataType_UINT64)
+                    if (tensor.data_type() == onnx_ng::TensorProto_DataType_UINT64)
                     {
                         return detail::__get_data<float>(tensor.uint64_data());
                     }
@@ -142,9 +142,9 @@ namespace ngraph
                 }
 
                 template <>
-                inline std::vector<int32_t> get_data(const onnx::TensorProto& tensor)
+                inline std::vector<int32_t> get_data(const onnx_ng::TensorProto& tensor)
                 {
-                    if (tensor.data_type() == onnx::TensorProto_DataType_INT32)
+                    if (tensor.data_type() == onnx_ng::TensorProto_DataType_INT32)
                     {
                         return detail::__get_data<int32_t>(tensor.int32_data());
                     }
@@ -152,9 +152,9 @@ namespace ngraph
                 }
 
                 template <>
-                inline std::vector<int64_t> get_data(const onnx::TensorProto& tensor)
+                inline std::vector<int64_t> get_data(const onnx_ng::TensorProto& tensor)
                 {
-                    if (tensor.data_type() != onnx::TensorProto_DataType_INT64)
+                    if (tensor.data_type() != onnx_ng::TensorProto_DataType_INT64)
                     {
                         throw error::tensor::invalid_data_type{tensor.data_type()};
                     }
@@ -162,9 +162,9 @@ namespace ngraph
                 }
 
                 template <>
-                inline std::vector<uint64_t> get_data(const onnx::TensorProto& tensor)
+                inline std::vector<uint64_t> get_data(const onnx_ng::TensorProto& tensor)
                 {
-                    if (tensor.data_type() != onnx::TensorProto_DataType_UINT64)
+                    if (tensor.data_type() != onnx_ng::TensorProto_DataType_UINT64)
                     {
                         throw error::tensor::invalid_data_type{tensor.data_type()};
                     }
@@ -178,26 +178,26 @@ namespace ngraph
         public:
             enum class Type
             {
-                undefined = onnx::TensorProto_DataType_UNDEFINED,
-                float32 = onnx::TensorProto_DataType_FLOAT,
-                uint8 = onnx::TensorProto_DataType_UINT8,
-                int8 = onnx::TensorProto_DataType_INT8,
-                uint16 = onnx::TensorProto_DataType_UINT16,
-                int16 = onnx::TensorProto_DataType_INT16,
-                int32 = onnx::TensorProto_DataType_INT32,
-                int64 = onnx::TensorProto_DataType_INT64,
-                string = onnx::TensorProto_DataType_STRING,
-                boolean = onnx::TensorProto_DataType_BOOL,
-                float16 = onnx::TensorProto_DataType_FLOAT16,
-                float64 = onnx::TensorProto_DataType_DOUBLE,
-                uint32 = onnx::TensorProto_DataType_UINT32,
-                uint64 = onnx::TensorProto_DataType_UINT64,
-                complex64 = onnx::TensorProto_DataType_COMPLEX64,
-                complex128 = onnx::TensorProto_DataType_COMPLEX128
+                undefined = onnx_ng::TensorProto_DataType_UNDEFINED,
+                float32 = onnx_ng::TensorProto_DataType_FLOAT,
+                uint8 = onnx_ng::TensorProto_DataType_UINT8,
+                int8 = onnx_ng::TensorProto_DataType_INT8,
+                uint16 = onnx_ng::TensorProto_DataType_UINT16,
+                int16 = onnx_ng::TensorProto_DataType_INT16,
+                int32 = onnx_ng::TensorProto_DataType_INT32,
+                int64 = onnx_ng::TensorProto_DataType_INT64,
+                string = onnx_ng::TensorProto_DataType_STRING,
+                boolean = onnx_ng::TensorProto_DataType_BOOL,
+                float16 = onnx_ng::TensorProto_DataType_FLOAT16,
+                float64 = onnx_ng::TensorProto_DataType_DOUBLE,
+                uint32 = onnx_ng::TensorProto_DataType_UINT32,
+                uint64 = onnx_ng::TensorProto_DataType_UINT64,
+                complex64 = onnx_ng::TensorProto_DataType_COMPLEX64,
+                complex128 = onnx_ng::TensorProto_DataType_COMPLEX128
             };
 
             Tensor() = delete;
-            explicit Tensor(const onnx::TensorProto& tensor)
+            explicit Tensor(const onnx_ng::TensorProto& tensor)
                 : m_tensor_proto{tensor}
                 , m_shape{std::begin(tensor.dims()), std::end(tensor.dims())}
             {
@@ -242,25 +242,25 @@ namespace ngraph
                 }
                 switch (m_tensor_proto.data_type())
                 {
-                case onnx::TensorProto_DataType::TensorProto_DataType_BOOL: return element::boolean;
-                case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT:
-                case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT16: return element::f32;
-                case onnx::TensorProto_DataType::TensorProto_DataType_DOUBLE: return element::f64;
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT8: return element::i8;
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT16: return element::i16;
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT32: return element::i32;
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT64: return element::i64;
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT8: return element::u8;
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT16: return element::u16;
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT32: return element::u32;
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT64: return element::u64;
+                case onnx_ng::TensorProto_DataType::TensorProto_DataType_BOOL: return element::boolean;
+                case onnx_ng::TensorProto_DataType::TensorProto_DataType_FLOAT:
+                case onnx_ng::TensorProto_DataType::TensorProto_DataType_FLOAT16: return element::f32;
+                case onnx_ng::TensorProto_DataType::TensorProto_DataType_DOUBLE: return element::f64;
+                case onnx_ng::TensorProto_DataType::TensorProto_DataType_INT8: return element::i8;
+                case onnx_ng::TensorProto_DataType::TensorProto_DataType_INT16: return element::i16;
+                case onnx_ng::TensorProto_DataType::TensorProto_DataType_INT32: return element::i32;
+                case onnx_ng::TensorProto_DataType::TensorProto_DataType_INT64: return element::i64;
+                case onnx_ng::TensorProto_DataType::TensorProto_DataType_UINT8: return element::u8;
+                case onnx_ng::TensorProto_DataType::TensorProto_DataType_UINT16: return element::u16;
+                case onnx_ng::TensorProto_DataType::TensorProto_DataType_UINT32: return element::u32;
+                case onnx_ng::TensorProto_DataType::TensorProto_DataType_UINT64: return element::u64;
                 default: throw error::tensor::unsupported_data_type{m_tensor_proto.data_type()};
                 }
             }
 
-            operator onnx::TensorProto_DataType() const { return m_tensor_proto.data_type(); }
+            operator onnx_ng::TensorProto_DataType() const { return m_tensor_proto.data_type(); }
         private:
-            const onnx::TensorProto& m_tensor_proto;
+            const onnx_ng::TensorProto& m_tensor_proto;
             Shape m_shape;
         };
 

@@ -17,8 +17,8 @@
 #pragma once
 
 #include <ostream>
-#include "onnx.pb.h"
-#include "onnx-operators.pb.h"
+#include "onnx_ng.pb.h"
+#include "onnx-operators_ng.pb.h"
 
 namespace ngraph
 {
@@ -28,7 +28,7 @@ namespace ngraph
         {
         public:
             Model() = delete;
-            explicit Model(const onnx::ModelProto& model_proto)
+            explicit Model(const onnx_ng::ModelProto& model_proto)
                 : m_model_proto{model_proto}
             {
             }
@@ -40,7 +40,7 @@ namespace ngraph
             Model& operator=(const Model&) = delete;
 
             const std::string& get_producer_name() const { return m_model_proto.producer_name(); }
-            const onnx::GraphProto& get_graph() const { return m_model_proto.graph(); }
+            const onnx_ng::GraphProto& get_graph() const { return m_model_proto.graph(); }
             std::int64_t get_model_version() const { return m_model_proto.model_version(); }
             const std::string& get_producer_version() const
             {
@@ -48,7 +48,7 @@ namespace ngraph
             }
 
         private:
-            const onnx::ModelProto& m_model_proto;
+            const onnx_ng::ModelProto& m_model_proto;
         };
 
         inline std::ostream& operator<<(std::ostream& outs, const Model& model)

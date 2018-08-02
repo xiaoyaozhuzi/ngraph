@@ -22,7 +22,7 @@
 
 #include "ngraph/node_vector.hpp"
 
-#include "onnx.pb.h"
+#include "onnx_ng.pb.h"
 
 #include "attribute.hpp"
 #include "tensor.hpp"
@@ -54,7 +54,7 @@ namespace ngraph
         {
         public:
             Node() = delete;
-            Node(const onnx::NodeProto& node_proto, const Graph* graph)
+            Node(const onnx_ng::NodeProto& node_proto, const Graph* graph)
                 : m_node_proto{node_proto}
                 , m_graph{graph}
                 , m_attributes{std::begin(node_proto.attribute()), std::end(node_proto.attribute())}
@@ -108,7 +108,7 @@ namespace ngraph
             }
 
         private:
-            const onnx::NodeProto& m_node_proto;
+            const onnx_ng::NodeProto& m_node_proto;
             const Graph* m_graph;
             std::vector<Attribute> m_attributes;
             std::vector<std::reference_wrapper<const std::string>> m_output_names;
