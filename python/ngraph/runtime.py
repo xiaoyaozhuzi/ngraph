@@ -51,10 +51,10 @@ class Runtime:
         """Return a callable Computation object."""
         return ComputationNode(self, node, *inputs)
 
-    def computation_function(self, function, *inputs):
+    def computation_function(self, function):
         # type: (Function, *Node) -> 'ComputationFunction'
         """Return a callable Computation object."""
-        return ComputationFunction(self, function, *inputs)
+        return ComputationFunction(self, function)
 
 
 class ComputationBase:
@@ -152,9 +152,9 @@ class ComputationNode(ComputationBase):
 class ComputationFunction(ComputationBase):
     """"""
 
-    def __init__(self, runtime, function, *parameters):  
+    def __init__(self, runtime, function):
         # type: (Runtime, Function, *Parameter) -> None
-        super(ComputationFunction, self).__init__(runtime, function, *parameters)
+        super(ComputationFunction, self).__init__(runtime, function, *function.get_parameters())
 
     def __repr__(self):  # type: () -> str
         params_string = ', '.join([param.name for param in self.parameters])

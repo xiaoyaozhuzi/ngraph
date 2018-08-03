@@ -16,23 +16,17 @@
 
 import os
 import numpy as np
-import pytest
 
-import ngraph as ng
 from ngraph.impl.onnx_import import onnx_import
 from test.ngraph.util import get_runtime
 
 def test_import_onnx_function():
     runtime = get_runtime()
     dtype = np.float32
-    shape = [1]
-    parameter_a = ng.parameter(shape, dtype=dtype, name='A')
-    parameter_b = ng.parameter(shape, dtype=dtype, name='B')
-    parameter_c = ng.parameter(shape, dtype=dtype, name='C')
     cur_dir = os.path.dirname(__file__)
     model_path = os.path.join(cur_dir, '../../../test/models/onnx/add_abc.onnx')
-    function = onnx_import.import_onnx_function_file(model_path)
-    computation = runtime.computation_function(function, parameter_a, parameter_b, parameter_c)
+    ng_function = onnx_import.load_onnx_model_file(model_path)[0]
+    computation = runtime.computation_function(ng_function)
 
     value_a = np.array([1.0], dtype=dtype)
     value_b = np.array([2.0], dtype=dtype)
