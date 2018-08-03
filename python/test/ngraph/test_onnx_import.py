@@ -14,27 +14,28 @@
 # limitations under the License.
 # ******************************************************************************
 
+import os
 import numpy as np
 import pytest
 
 import ngraph as ng
-from ngraph.impl.onnx_import import import_onnx_function
+from ngraph.impl.onnx_import import onnx_import
 from test.ngraph.util import get_runtime
 
 def test_import_onnx_function():
     runtime = get_runtime()
-
-    shape = [2, 2]
+    dtype = np.float32
+    shape = [1]
     parameter_a = ng.parameter(shape, dtype=dtype, name='A')
     parameter_b = ng.parameter(shape, dtype=dtype, name='B')
     parameter_c = ng.parameter(shape, dtype=dtype, name='C')
-    model = (parameter_a + parameter_b) * parameter_c
-    function = import_onnx_function(model.SerializeToString())
+    cur_dir = os.path.dirname(__file__)
+    model_path = os.path.join(cur_dir, '../../../test/models/onnx/add_abc.onnx')
+    function = onnx_import.import_onnx_function_file(model_path)
     computation = runtime.computation_function(function, parameter_a, parameter_b, parameter_c)
 
-    value_a = np.array([[1, 2], [3, 4]], dtype=dtype)
-    value_b = np.array([[5, 6], [7, 8]], dtype=dtype)
-    value_c = np.array([[9, 10], [11, 12]], dtype=dtype)
+    value_a = np.array([1.0], dtype=dtype)
+    value_b = np.array([2.0], dtype=dtype)
+    value_c = np.array([3.0], dtype=dtype)
     result = computation(value_a, value_b, value_c)
-    assert np.allclose(result, np.array([[54, 80], [110, 144]], dtype=dtype))
-
+    assert np.allclose(result, np.array([6], dtype=dtype))

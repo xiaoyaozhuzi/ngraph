@@ -72,18 +72,18 @@ class ComputationBase:
         self.function = function
         self.backend = runtime.backend
 
-    def __call__(self, result_view, result_shape, *input_values):
+    def __call__(self, result_view, result_shape, result_dtype, *input_values):
         # type: (TensorViewType, Shape, *NumericData) -> NumericData
         """Run computation on input values and return result."""
         for tensor_view, value in zip(self.tensor_views, input_values):
             if not isinstance(value, np.ndarray):
                 value = np.array(value)
-            Computation._write_ndarray_to_tensor_view(value, tensor_view)
+            ComputationBase._write_ndarray_to_tensor_view(value, tensor_view)
 
         result_arr = np.empty(result_shape, dtype=result_dtype)
         self.backend.call(self.function, [result_view], self.tensor_views)
 
-        Computation._read_tensor_view_to_ndarray(result_view, result_arr)
+        ComputationBase._read_tensor_view_to_ndarray(result_view, result_arr)
         result_arr = result_arr.reshape(result_shape)
         return result_arr
 
@@ -113,7 +113,7 @@ class ComputationBase:
                 tensor_view.element_type)
             value = value.astype(tensor_view_dtype)
 
-        buffer_size = Computation._get_buffer_size(
+        buffer_size = ComputationBase._get_buffer_size(
             tensor_view.element_type, tensor_view.element_count)
 
         nparray = np.ascontiguousarray(value)
@@ -122,7 +122,7 @@ class ComputationBase:
     @staticmethod
     def _read_tensor_view_to_ndarray(tensor_view, output):
         # type: (TensorViewType, np.ndarray) -> None
-        buffer_size = Computation._get_buffer_size(
+        buffer_size = ComputationBase._get_buffer_size(
             tensor_view.element_type, tensor_view.element_count)
         tensor_view.read(util.numpy_to_c(output), 0, buffer_size)
 
@@ -146,7 +146,7 @@ class ComputationNode(ComputationBase):
         result_dtype = get_dtype(result_element_type)
 
         result_view = self.runtime.backend.create_tensor(result_element_type, result_shape)
-        return super(ComputationNode, self).__call__(result_view, result_shape, input_values)
+        return super(ComputationNode, self).__call__(result_view, result_shape, result_dtype, *input_values)
 
 
 class ComputationFunction(ComputationBase):
@@ -154,7 +154,7 @@ class ComputationFunction(ComputationBase):
 
     def __init__(self, runtime, function, *parameters):  
         # type: (Runtime, Function, *Parameter) -> None
-        super(ComputationFunction, self).__init__(runtime, function, parameters)
+        super(ComputationFunction, self).__init__(runtime, function, *parameters)
 
     def __repr__(self):  # type: () -> str
         params_string = ', '.join([param.name for param in self.parameters])
@@ -163,8 +163,8 @@ class ComputationFunction(ComputationBase):
     def __call__(self, *input_values):  # type: (*NumericData) -> NumericData
         """Run computation on input values and return result."""
         result_element_type = self.function.get_output_element_type(0)
-        result_shape = self.node.get_output_shape(0)
+        result_shape = self.function.get_output_shape(0)
         result_dtype = get_dtype(result_element_type)
 
         result_view = self.runtime.backend.create_tensor(result_element_type, result_shape)
-        return super(ComputationNode, self).__call__(result_view, result_shape, input_values)
+        return super(ComputationFunction, self).__call__(result_view, result_shape, result_dtype, *input_values)
