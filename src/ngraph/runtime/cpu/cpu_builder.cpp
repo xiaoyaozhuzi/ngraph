@@ -102,6 +102,7 @@
 #include "ngraph/runtime/cpu/kernel/tan.hpp"
 #include "ngraph/runtime/cpu/kernel/tanh.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/tvm_kernels.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -147,7 +148,8 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Divide)
             {
-                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::divide);
+                //                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::divide);
+                BUILD_TVM_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::tvm_kernel::build_divide);
             }
 
             template <>
