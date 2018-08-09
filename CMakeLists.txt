@@ -232,6 +232,13 @@ include(cmake/external_mkldnn.cmake)
 include(cmake/external_tbb.cmake)
 include(cmake/external_tvm.cmake)
 
+if (NGRAPH_HALIDE)
+    message(WARNING "Halide build system integration is currently using an older LLVM release \
+                     and is not expected to work across most build environments. Consider \
+                     disabling it till this message goes away")
+    include(cmake/external_halide.cmake)
+endif()
+
 add_subdirectory(src)
 
 if (NGRAPH_UNIT_TEST_ENABLE)
