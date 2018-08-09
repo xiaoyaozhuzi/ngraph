@@ -16,7 +16,11 @@
 
 #pragma once
 
+#include <fstream>
+#include <utility>
 #include <vector>
+
+#include "ngraph/frontend/onnx_import/exceptions.hpp"
 
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -81,6 +85,27 @@ namespace ngraph
                         inline std::vector<T> __get_data(const Container& container)
                         {
                             return {std::begin(container), std::end(container)};
+                        }
+
+                        std::ifstream __get_binary_file_stream(const std::string& path)
+                        {
+                            std::ifstream ifs{path, std::ios::in | std::ios::binary};
+                            if (!ifs.is_open())
+                            {
+                                throw error::file_open{path};
+                            }
+                            return ifs;
+                        }
+
+                        onnx::TensorProto __read_tensor_from_ifstream(std::ifstream&& sin)
+                        {
+                            std::ifstream ifs{std::move(sin)};
+                            onnx::TensorProto tensor_proto;
+                            if (!tensor_proto.ParseFromIstream(&ifs))
+                            {
+                                throw error::stream_parse{ifs};
+                            }
+                            return tensor_proto;
                         }
                     }
                 }
@@ -200,6 +225,20 @@ namespace ngraph
             explicit Tensor(const onnx::TensorProto& tensor)
                 : m_tensor_proto{tensor}
                 , m_shape{std::begin(tensor.dims()), std::end(tensor.dims())}
+            {
+            }
+
+            Tensor(std::ifstream&& ifs)
+                : Tensor(
+                    detail::tensor::detail::__read_tensor_from_ifstream(
+                        std::forward<std::ifstream>(ifs)))
+            {
+            }
+
+            Tensor(const std::string& path)
+                : Tensor(
+                    std::forward<std::ifstream>(
+                        (detail::tensor::detail::__get_binary_file_stream(path))))
             {
             }
 

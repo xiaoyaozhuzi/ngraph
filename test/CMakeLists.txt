@@ -144,6 +144,10 @@ if (NGRAPH_GPU_ENABLE)
     target_link_libraries(unit-test gpu_backend)
 endif()
 
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_sources(unit-test PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
+endif()
+
 add_custom_target(style-check
     COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
 )

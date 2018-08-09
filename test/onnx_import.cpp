@@ -72,3 +72,9 @@ TEST(onnx, model_split)
             ngraph::file_util::path_join(SERIALIZED_ZOO, "onnx/split.onnx"))};
     auto backend{ngraph::runtime::Backend::create("CPU")};
 }
+
+TEST(onnx, test_read_tensor_proto_data_file)
+{
+    std::vector<float> data{
+        ngraph::file_util::path_join(SERIALIZED_ZOO,"batchnorm_default_input_0.pb")};
+}

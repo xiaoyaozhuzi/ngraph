@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "ngraph/function.hpp"
 
@@ -36,6 +37,9 @@ namespace ngraph
 
         // Convert the first output of an ONNX model to an nGraph Function
         std::shared_ptr<Function> import_onnx_function(const std::string&);
+
+        // Return data stored inside protobuf file as Tensor converted to std::vector.
+        std::vector<double> read_tensor_proto_data_file(const std::string& path);
 
     } // namespace onnx_import
 

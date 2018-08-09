@@ -18,44 +18,31 @@
 
 #include "ngraph/except.hpp"
 
+#include "exceptions.hpp"
 #include "graph.hpp"
 #include "model.hpp"
 #include "node.hpp"
 #include "onnx.hpp"
+#include "tensor.hpp"
 
 namespace ngraph
 {
+    template <typename T>
+    static inline std::vector<T> _read_tensor_proto_data_file(const std::string& path)
+    {
+        onnx::TensorProto tensor_proto{path};
+        // return tensor_proto.get_data<T>();
+        // TODO: implement sth similar to: onnx.numpy_helper.to_array
+    }
+
     namespace onnx_import
     {
-        namespace detail
-        {
-            namespace error
-            {
-                struct file_open : ngraph_error
-                {
-                    explicit file_open(const std::string& path)
-                        : ngraph_error{"failure opening file:" + path}
-                    {
-                    }
-                };
-
-                struct stream_parse : ngraph_error
-                {
-                    explicit stream_parse(std::istream&)
-                        : ngraph_error{"failure parsing data from the stream"}
-                    {
-                    }
-                };
-
-            } // namespace error
-        }     // namespace detail
-
         std::vector<std::shared_ptr<Function>> load_onnx_model(std::istream& sin)
         {
             onnx::ModelProto model_proto;
             if (!model_proto.ParseFromIstream(&sin))
             {
-                throw detail::error::stream_parse{sin};
+                throw error::stream_parse{sin};
             }
             std::vector<std::shared_ptr<Function>> output_functions;
             Model model{model_proto};
@@ -73,7 +60,7 @@ namespace ngraph
             std::ifstream ifs{path, std::ios::in | std::ios::binary};
             if (!ifs.is_open())
             {
-                throw detail::error::file_open{path};
+                throw error::file_open{path};
             }
             return load_onnx_model(ifs);
         }
@@ -88,6 +75,10 @@ namespace ngraph
             return load_onnx_model(path).front();
         }
 
+        std::vector<double> read_tensor_proto_data_file(const std::string& path)
+        {
+            return _read_tensor_proto_data_file<double>(path);
+        }
     } // namespace onnx_import
 
 } // namespace ngraph
