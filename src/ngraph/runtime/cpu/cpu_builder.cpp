@@ -130,7 +130,8 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Add)
             {
-                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::add);
+                //                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::add);
+                BUILD_TVM_BINARY_ELEMWISE_FUNCTOR(topi::add);
             }
 
             template <>
@@ -149,7 +150,7 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Divide)
             {
                 //                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::divide);
-                BUILD_TVM_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::tvm_kernel::build_divide);
+                BUILD_TVM_BINARY_ELEMWISE_FUNCTOR(topi::divide);
             }
 
             template <>
@@ -298,7 +299,8 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Relu)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::relu);
+                //BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::relu);
+                BUILD_TVM_RELU_FUNCTOR;
             }
 
             template <>
@@ -316,7 +318,8 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Exp)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::exp);
+                //BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::exp);
+                BUILD_TVM_UNARY_ELEMWISE_FUNCTOR(topi::exp);
             }
 
             template <>

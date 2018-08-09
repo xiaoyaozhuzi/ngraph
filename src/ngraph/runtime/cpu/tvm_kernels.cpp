@@ -31,7 +31,6 @@ using namespace ngraph::runtime::cpu;
 
 TVMInstance::TVMInstance()
 {
-    // TODO lfeng: hard coded to float32
     m_config = tvm::build_config();
     m_target = tvm::target::llvm();
     m_dl_ctx.device_type = static_cast<DLDeviceType>(kDLCPU);
@@ -55,42 +54,97 @@ DLTensor TVMInstance::create_dltensor(const DLDataType& type,
     t.data = data;
     return t;
 }
+
 static const DLDataType DLType_Float32{kDLFloat, 32, 1};
 
 template <>
-tvm::PackedFunc tvm_kernel::build_divide<float>(const std::unique_ptr<TVMInstance>& tvm_instance)
+tvm::PackedFunc
+    tvm_kernel::unary_elemwise_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                              const UnaryElemwiseFunc& topi_func)
 {
-    std::cout << "divide float build" << std::endl;
     tvm::Var n("n");
     auto A = tvm::placeholder({n}, tvm::Float(32), "a");
-    auto B = tvm::placeholder({n}, tvm::Float(32), "b");
 
-    auto C = topi::divide(A, B);
+    auto R = topi_func(A, "tensor", topi::kElementWise);
 
     std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
 
-    auto schedule = topi::x86::default_schedule(tvm_instance->target(), {C});
-    auto lowered = tvm::lower(schedule, {A, B, C}, "func_divide", binds, tvm_instance->config());
+    auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
+    auto lowered = tvm::lower(schedule, {A, R}, "func", binds, tvm_instance->config());
     auto module =
         tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config());
     // store module to keep its lifetime
     tvm_instance->add_module(module);
-    return module->GetFunction("func_divide", false);
+    return module->GetFunction("func", false);
 }
 
 template <>
-void tvm_kernel::binary_elemwise_compute<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
-                                                const tvm::PackedFunc& func,
-                                                void* input0,
-                                                void* input1,
-                                                void* output,
-                                                size_t count)
+void tvm_kernel::unary_elemwise_kernel<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                              const tvm::PackedFunc& func,
+                                              void* input,
+                                              void* output,
+                                              size_t count)
 {
-    std::cout << "divide float compute" << std::endl;
+    int64_t dlshape[] = {static_cast<int64_t>(count)};
+    DLTensor a = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, input);
+    DLTensor r = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, output);
+
+    func(&a, &r);
+}
+
+template <>
+tvm::PackedFunc
+    tvm_kernel::binary_elemwise_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                               const BinaryElemwiseFunc& topi_func)
+{
+    tvm::Var n("n");
+    auto A = tvm::placeholder({n}, tvm::Float(32), "a");
+    auto B = tvm::placeholder({n}, tvm::Float(32), "b");
+
+    auto R = topi_func(A, B, "tensor", topi::kBroadcast);
+
+    std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
+
+    auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
+    auto lowered = tvm::lower(schedule, {A, B, R}, "func", binds, tvm_instance->config());
+    auto module =
+        tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config());
+    // store module to keep its lifetime
+    tvm_instance->add_module(module);
+    return module->GetFunction("func", false);
+}
+
+template <>
+void tvm_kernel::binary_elemwise_kernel<float>(const std::unique_ptr<TVMInstance>& tvm_instance,
+                                               const tvm::PackedFunc& func,
+                                               void* input0,
+                                               void* input1,
+                                               void* output,
+                                               size_t count)
+{
     int64_t dlshape[] = {static_cast<int64_t>(count)};
     DLTensor a = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, input0);
     DLTensor b = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, input1);
-    DLTensor c = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, output);
+    DLTensor r = tvm_instance->create_dltensor(DLType_Float32, 1, dlshape, output);
 
-    func(&a, &b, &c);
+    func(&a, &b, &r);
+}
+
+template <>
+tvm::PackedFunc tvm_kernel::relu_builder<float>(const std::unique_ptr<TVMInstance>& tvm_instance)
+{
+    tvm::Var n("n");
+    auto A = tvm::placeholder({n}, tvm::Float(32), "a");
+
+    auto R = topi::relu<float>(A);
+
+    std::unordered_map<tvm::Tensor, tvm::Buffer> binds;
+
+    auto schedule = topi::x86::default_schedule(tvm_instance->target(), {R});
+    auto lowered = tvm::lower(schedule, {A, R}, "func", binds, tvm_instance->config());
+    auto module =
+        tvm::build(lowered, tvm_instance->target(), tvm::Target(), tvm_instance->config());
+    // store module to keep its lifetime
+    tvm_instance->add_module(module);
+    return module->GetFunction("func", false);
 }
