@@ -54,32 +54,22 @@ void Node::validate_and_infer_types()
 
 void Node::set_output_type(size_t i, const element::Type& element_type, const Shape& shape)
 {
-    shared_ptr<TensorViewType> tensor_view_type = make_shared<TensorViewType>(element_type, shape);
-    auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
-        tensor_view_type, ngraph::descriptor::Tensor::make_tensor_name(this, i));
-
     if (m_outputs.size() == i)
     {
+        shared_ptr<TensorViewType> tensor_view_type =
+            make_shared<TensorViewType>(element_type, shape);
+        auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
+            tensor_view_type, ngraph::descriptor::Tensor::make_tensor_name(this, i));
         m_outputs.emplace_back(this, i, tensor_view_descriptor);
     }
     else if (m_outputs.size() > i)
     {
-        m_outputs.at(i).set_tensor_view(tensor_view_descriptor);
+        m_outputs.at(i).get_tensor_view()->set_tensor_view_type(element_type, shape);
     }
     else
     {
         throw ngraph_error("set_output_type can only extend the outputs by one");
     }
-}
-
-void Node::set_value_type_checked(const element::Type& element_type, const Shape& shape)
-{
-    set_output_type(0, element_type, shape);
-}
-
-void Node::set_value_type_checked(const element::Type& element_type, const Shape& shape)
-{
-    set_output_type(0, element_type, shape);
 }
 
 void Node::set_value_type_checked(const element::Type& element_type, const Shape& shape)

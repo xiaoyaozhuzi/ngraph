@@ -14,10 +14,10 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/op/reshape.hpp"
-#include "ngraph/function.hpp"
-
 #include <algorithm>
+
+#include "ngraph/function.hpp"
+#include "ngraph/op/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -77,8 +77,7 @@ void op::Reshape::validate_and_infer_types()
     {
         m_is_transpose = true;
     }
-
-    set_value_type_checked(input.get_element_type(), m_output_shape);
+    set_output_type(0, input.get_element_type(), m_output_shape);
 }
 
 shared_ptr<Node> op::Reshape::copy_with_new_args(const NodeVector& new_args) const

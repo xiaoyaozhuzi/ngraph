@@ -31,7 +31,7 @@ op::Result::Result(const shared_ptr<Node>& arg)
 
 void op::Result::validate_and_infer_types()
 {
-   util::RequiresTensorViewArgs::validate_and_infer_types(); 
+    util::RequiresTensorViewArgs::validate_and_infer_types();
 
     if (get_input_size() != 1)
     {

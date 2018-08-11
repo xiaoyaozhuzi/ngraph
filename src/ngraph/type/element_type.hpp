@@ -48,7 +48,7 @@ namespace ngraph
         class Type
         {
         public:
-            Type(){}
+            Type() {}
             Type(const Type&) = default;
             Type(size_t bitwidth, bool is_real, bool is_signed, const std::string& cname);
             Type& operator=(const Type&);

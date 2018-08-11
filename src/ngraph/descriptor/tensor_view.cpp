@@ -24,3 +24,9 @@ shared_ptr<const ngraph::TensorViewType> descriptor::TensorView::get_value_type(
 {
     return m_tensor_view_type;
 }
+
+void descriptor::TensorView::set_tensor_view_type(const element::Type& element_type,
+                                                  const Shape& shape)
+{
+    m_tensor_view_type = make_shared<ngraph::TensorViewType>(element_type, shape);
+}

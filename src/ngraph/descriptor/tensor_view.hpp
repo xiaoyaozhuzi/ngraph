@@ -20,6 +20,7 @@
 #include <string>
 
 #include "ngraph/shape.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
@@ -61,6 +62,8 @@ namespace ngraph
             {
                 return m_tensor_view_type;
             }
+
+            void set_tensor_view_type(const element::Type& element_type, const Shape& shape);
 
             const std::shared_ptr<layout::TensorViewLayout>& get_tensor_view_layout() const
             {
