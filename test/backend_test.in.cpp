@@ -40,6 +40,8 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
+#define NGRAPH_TYPED_TEST(name, type)                                                              \
+    NGRAPH_TEST(${BACKEND_NAME}, name##_##type) { backend_##name<type>(); }
 static const vector<element::Type> s_known_element_types = {element::from<float>(),
                                                             element::from<double>(),
                                                             element::from<int8_t>(),
@@ -244,67 +246,47 @@ NGRAPH_TEST(${BACKEND_NAME}, multiply_overload)
               (test::NDArray<float, 2>({{5, 12}, {21, 32}})).get_vector());
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, abc)
+template <typename T>
+void backend_abc()
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto A = make_shared<op::Parameter>(element::from<T>(), shape);
+    auto B = make_shared<op::Parameter>(element::from<T>(), shape);
+    auto C = make_shared<op::Parameter>(element::from<T>(), shape);
     auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::TensorView> a = backend->create_tensor(element::from<T>(), shape);
+    shared_ptr<runtime::TensorView> b = backend->create_tensor(element::from<T>(), shape);
+    shared_ptr<runtime::TensorView> c = backend->create_tensor(element::from<T>(), shape);
+    shared_ptr<runtime::TensorView> result = backend->create_tensor(element::from<T>(), shape);
 
-    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
-    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
-    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
-
-    backend->call(f, {result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
-
-    backend->call(f, {result}, {b, a, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
-
-    backend->call(f, {result}, {a, c, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, abc_int64)
-{
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::i64, shape);
-    auto B = make_shared<op::Parameter>(element::i64, shape);
-    auto C = make_shared<op::Parameter>(element::i64, shape);
-    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::i64, shape);
-    copy_data(a, vector<int64_t>{1, 2, 3, 4});
-    auto b = backend->create_tensor(element::i64, shape);
-    copy_data(b, vector<int64_t>{5, 6, 7, 8});
-    auto c = backend->create_tensor(element::i64, shape);
-    copy_data(c, vector<int64_t>{9, 10, 11, 12});
-    auto result = backend->create_tensor(element::i64, shape);
+    copy_data(a, test::NDArray<T, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<T, 2>({{5, 6}, {7, 8}}).get_vector());
+    copy_data(c, test::NDArray<T, 2>({{9, 10}, {11, 12}}).get_vector());
 
     backend->call(f, {result}, {a, b, c});
-    EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), read_vector<int64_t>(result));
+    EXPECT_EQ(read_vector<T>(result), (test::NDArray<T, 2>({{54, 80}, {110, 144}})).get_vector());
 
     backend->call(f, {result}, {b, a, c});
-    EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), read_vector<int64_t>(result));
+    EXPECT_EQ(read_vector<T>(result), (test::NDArray<T, 2>({{54, 80}, {110, 144}})).get_vector());
 
     backend->call(f, {result}, {a, c, b});
-    EXPECT_EQ((vector<int64_t>{50, 72, 98, 128}), read_vector<int64_t>(result));
+    EXPECT_EQ(read_vector<T>(result), (test::NDArray<T, 2>({{50, 72}, {98, 128}})).get_vector());
 }
+
+NGRAPH_TYPED_TEST(abc, float);
+NGRAPH_TYPED_TEST(abc, double)
+// NGRAPH_TYPED_TEST(abc, int8_t)
+// NGRAPH_TYPED_TEST(abc, int16_t)
+NGRAPH_TYPED_TEST(abc, int32_t)
+NGRAPH_TYPED_TEST(abc, int64_t)
+// NGRAPH_TYPED_TEST(abc, uint8_t)
+// NGRAPH_TYPED_TEST(abc, uint16_t)
+NGRAPH_TYPED_TEST(abc, uint32_t)
+NGRAPH_TYPED_TEST(abc, uint64_t)
 
 // Multiple retrive values
 NGRAPH_TEST(${BACKEND_NAME}, multiple_result)
