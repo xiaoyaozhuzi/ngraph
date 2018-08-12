@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -41,7 +40,6 @@ class ngraph::runtime::interpreter::AddExec : public ExecNode
 public:
     static std::shared_ptr<ExecNode> create(const std::shared_ptr<ngraph::Node>& node)
     {
-        std::cout << "create Add" << std::endl;
         return std::static_pointer_cast<ExecNode>(std::make_shared<AddExec>(node));
     }
 
@@ -50,8 +48,6 @@ public:
         , m_node{std::dynamic_pointer_cast<const ngraph::op::Add>(node)}
     {
         (void)m_node; // Silence compiler warning
-
-        std::cout << "Add ctor" << std::endl;
     }
 
     virtual ~AddExec() {}
@@ -59,11 +55,6 @@ public:
     void execute(const std::vector<std::shared_ptr<HostTensorView>>& out,
                  const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
-        std::cout << "execute Add" << std::endl;
-        reference::add<T>(args[0]->get_data_ptr<T>(),
-                            args[1]->get_data_ptr<T>(),
-                            out[0]->get_data_ptr<T>(),
-                            out[0]->get_element_count());
     }
 
     OP_TYPEID get_typeid() const override { return OP_TYPEID::Add_TYPEID; }

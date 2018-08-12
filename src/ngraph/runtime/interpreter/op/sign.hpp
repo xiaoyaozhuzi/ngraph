@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -41,7 +40,6 @@ class ngraph::runtime::interpreter::SignExec : public ExecNode
 public:
     static std::shared_ptr<ExecNode> create(const std::shared_ptr<ngraph::Node>& node)
     {
-        std::cout << "create Sign" << std::endl;
         return std::static_pointer_cast<ExecNode>(std::make_shared<SignExec>(node));
     }
 
@@ -50,8 +48,6 @@ public:
         , m_node{std::dynamic_pointer_cast<const ngraph::op::Sign>(node)}
     {
         (void)m_node; // Silence compiler warning
-
-        std::cout << "Sign ctor" << std::endl;
     }
 
     virtual ~SignExec() {}
@@ -59,7 +55,6 @@ public:
     void execute(const std::vector<std::shared_ptr<HostTensorView>>& out,
                  const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
-        std::cout << "execute Sign" << std::endl;
     }
 
     OP_TYPEID get_typeid() const override { return OP_TYPEID::Sign_TYPEID; }

@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -41,7 +40,6 @@ class ngraph::runtime::interpreter::PadExec : public ExecNode
 public:
     static std::shared_ptr<ExecNode> create(const std::shared_ptr<ngraph::Node>& node)
     {
-        std::cout << "create Pad" << std::endl;
         return std::static_pointer_cast<ExecNode>(std::make_shared<PadExec>(node));
     }
 
@@ -50,8 +48,6 @@ public:
         , m_node{std::dynamic_pointer_cast<const ngraph::op::Pad>(node)}
     {
         (void)m_node; // Silence compiler warning
-
-        std::cout << "Pad ctor" << std::endl;
     }
 
     virtual ~PadExec() {}
@@ -59,7 +55,6 @@ public:
     void execute(const std::vector<std::shared_ptr<HostTensorView>>& out,
                  const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
-        std::cout << "execute Pad" << std::endl;
     }
 
     OP_TYPEID get_typeid() const override { return OP_TYPEID::Pad_TYPEID; }

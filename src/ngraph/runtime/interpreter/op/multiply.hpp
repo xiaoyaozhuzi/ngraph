@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -41,7 +40,6 @@ class ngraph::runtime::interpreter::MultiplyExec : public ExecNode
 public:
     static std::shared_ptr<ExecNode> create(const std::shared_ptr<ngraph::Node>& node)
     {
-        std::cout << "create Multiply" << std::endl;
         return std::static_pointer_cast<ExecNode>(std::make_shared<MultiplyExec>(node));
     }
 
@@ -50,8 +48,6 @@ public:
         , m_node{std::dynamic_pointer_cast<const ngraph::op::Multiply>(node)}
     {
         (void)m_node; // Silence compiler warning
-
-        std::cout << "Multiply ctor" << std::endl;
     }
 
     virtual ~MultiplyExec() {}
@@ -59,12 +55,7 @@ public:
     void execute(const std::vector<std::shared_ptr<HostTensorView>>& out,
                  const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
-        std::cout << "execute Multiply" << std::endl;
-        reference::multiply<T>(args[0]->get_data_ptr<T>(),
-                                args[1]->get_data_ptr<T>(),
-                                out[0]->get_data_ptr<T>(),
-                                out[0]->get_element_count());
-   }
+    }
 
     OP_TYPEID get_typeid() const override { return OP_TYPEID::Multiply_TYPEID; }
 private:
