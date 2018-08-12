@@ -55,6 +55,14 @@ public:
     void execute(const std::vector<std::shared_ptr<HostTensorView>>& out,
                  const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
+        reference::max_pool<T>(args[0]->get_data_ptr<T>(),
+                               out[0]->get_data_ptr<T>(),
+                               args[0]->get_shape(),
+                               out[0]->get_shape(),
+                               m_node->get_window_shape(),
+                               m_node->get_window_movement_strides(),
+                               m_node->get_padding_below(),
+                               m_node->get_padding_above());
     }
 
     OP_TYPEID get_typeid() const override { return OP_TYPEID::MaxPool_TYPEID; }

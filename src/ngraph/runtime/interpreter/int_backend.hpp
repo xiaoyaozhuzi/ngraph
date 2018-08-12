@@ -246,7 +246,6 @@ private:
                    const std::vector<std::shared_ptr<HostTensorView>>& out,
                    const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
-        NGRAPH_INFO;
         switch (node.get_typeid())
         {
         case OP_TYPEID::Abs_TYPEID:
@@ -264,11 +263,13 @@ private:
             dynamic_cast<AddExec*>(&node)->execute<T>(out, args);
             break;
         }
+#ifdef NGRAPH_DISTRIBUTED
         case OP_TYPEID::AllReduce_TYPEID:
         {
             dynamic_cast<AllReduceExec*>(&node)->execute<T>(out, args);
             break;
         }
+#endif
         case OP_TYPEID::And_TYPEID:
         {
             dynamic_cast<AndExec*>(&node)->execute<T>(out, args);
@@ -581,99 +582,39 @@ private:
         }
         }
 
-        // node.execute<T>(out, args);
+        //         node.execute<T>(out, args);
         //         std::string node_op = node.description();
         //         if (node_op == "Abs")
         //         {
-        //             reference::abs<T>(
-        //                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         //         }
         //         else if (node_op == "Acos")
         //         {
-        //             reference::acos<T>(
-        //                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         //         }
         //         else if (node_op == "Add")
         //         {
-        //             reference::add<T>(args[0]->get_data_ptr<T>(),
-        //                               args[1]->get_data_ptr<T>(),
-        //                               out[0]->get_data_ptr<T>(),
-        //                               out[0]->get_element_count());
         //         }
         // #ifdef NGRAPH_DISTRIBUTED
         //         else if (node_op == "AllReduce")
         //         {
-        //             reference::allreduce<T>(args[0]->get_data_ptr<T>(),
-        //                                     out[0]->get_data_ptr<T>(),
-        //                                     args[0]->get_element_type(),
-        //                                     static_cast<int>(args[0]->get_element_count()));
         //         }
         // #endif
         //         else if (node_op == "And")
         //         {
-        //             reference::logical_and(args[0]->get_data_ptr<T>(),
-        //                                    args[1]->get_data_ptr<T>(),
-        //                                    out[0]->get_data_ptr<T>(),
-        //                                    out[0]->get_element_count());
         //         }
         //         else if (node_op == "Asin")
         //         {
-        //             reference::asin<T>(
-        //                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         //         }
         //         else if (node_op == "Atan")
         //         {
-        //             reference::atan<T>(
-        //                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         //         }
         //         else if (node_op == "AvgPool")
         //         {
-        //             op::AvgPool* avg_pool = dynamic_cast<op::AvgPool*>(&node);
-
-        //             reference::avg_pool<T>(args[0]->get_data_ptr<T>(),
-        //                                    out[0]->get_data_ptr<T>(),
-        //                                    args[0]->get_shape(),
-        //                                    out[0]->get_shape(),
-        //                                    avg_pool->get_window_shape(),
-        //                                    avg_pool->get_window_movement_strides(),
-        //                                    avg_pool->get_padding_below(),
-        //                                    avg_pool->get_padding_above(),
-        //                                    avg_pool->get_include_padding_in_avg_computation());
         //         }
         //         else if (node_op == "GetOutputElement")
         //         {
-        //             const op::GetOutputElement* get_output_element =
-        //                 static_cast<const op::GetOutputElement*>(&node);
-        //             size_t n = get_output_element->get_n();
-        //             size_t num_bytes = out[0]->get_element_count() * out[0]->get_element_type().size();
-        //             std::memcpy(out[0]->get_data_ptr(), args[n]->get_data_ptr(), num_bytes);
         //         }
         //         else if (node_op == "BatchNorm")
         //         {
-        //             ngraph::op::BatchNorm* bn = dynamic_cast<ngraph::op::BatchNorm*>(&node);
-        //             if (bn->get_output_size() == 3)
-        //             {
-        //                 reference::batch_norm_three_outputs<T>(
-        //                     bn->get_eps_value(),
-        //                     reinterpret_cast<T*>(args[0]->get_data_ptr()),
-        //                     reinterpret_cast<T*>(args[1]->get_data_ptr()),
-        //                     reinterpret_cast<T*>(args[2]->get_data_ptr()),
-        //                     reinterpret_cast<T*>(out[0]->get_data_ptr()),
-        //                     reinterpret_cast<T*>(out[1]->get_data_ptr()),
-        //                     reinterpret_cast<T*>(out[2]->get_data_ptr()),
-        //                     args[2]->get_shape());
-        //             }
-        //             else
-        //             {
-        //                 reference::batch_norm_one_output<T>(bn->get_eps_value(),
-        //                                                     reinterpret_cast<T*>(args[0]->get_data_ptr()),
-        //                                                     reinterpret_cast<T*>(args[1]->get_data_ptr()),
-        //                                                     reinterpret_cast<T*>(args[2]->get_data_ptr()),
-        //                                                     reinterpret_cast<T*>(args[3]->get_data_ptr()),
-        //                                                     reinterpret_cast<T*>(args[4]->get_data_ptr()),
-        //                                                     reinterpret_cast<T*>(out[0]->get_data_ptr()),
-        //                                                     args[2]->get_shape());
-        //             }
         //         }
         //         else if (node_op == "AvgPoolBackprop")
         //         {
@@ -690,141 +631,21 @@ private:
         //         }
         //         else if (node_op == "Broadcast")
         //         {
-        //             op::Broadcast* broadcast = dynamic_cast<op::Broadcast*>(&node);
-        //             Shape in_shape = args[0]->get_shape();
-        //             Shape out_shape = out[0]->get_shape();
-        //             AxisSet broadcast_axes = broadcast->get_broadcast_axes();
-        //             reference::broadcast<T>(args[0]->get_data_ptr<T>(),
-        //                                     out[0]->get_data_ptr<T>(),
-        //                                     in_shape,
-        //                                     out_shape,
-        //                                     broadcast_axes);
         //         }
         //         else if (node_op == "Ceiling")
         //         {
-        //             reference::ceiling<T>(
-        //                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         //         }
         //         else if (node_op == "Concat")
         //         {
-        //             const op::Concat* concat = static_cast<const op::Concat*>(&node);
-        //             std::vector<const T*> in_args;
-        //             std::vector<Shape> in_shapes;
-        //             for (std::shared_ptr<HostTensorView> arg : args)
-        //             {
-        //                 in_args.push_back(arg->get_data_ptr<T>());
-        //                 in_shapes.push_back(arg->get_shape());
-        //             }
-        //             reference::concat<T>(in_args,
-        //                                  out[0]->get_data_ptr<T>(),
-        //                                  in_shapes,
-        //                                  out[0]->get_shape(),
-        //                                  concat->get_concatenation_axis());
         //         }
         //         else if (node_op == "Constant")
         //         {
-        //             const op::Constant* c = static_cast<const op::Constant*>(&node);
-        //             reference::constant<T>(
-        //                 c->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         //         }
         //         else if (node_op == "Convert")
         //         {
-        //             // const op::Convert* c = static_cast<const op::Convert*>(&node);
-        //             element::Type type = node.get_element_type();
-        //             if (type == element::boolean)
-        //             {
-        //                 reference::convert<T>(args[0]->get_data_ptr<T>(),
-        //                                       out[0]->get_data_ptr<char>(),
-        //                                       out[0]->get_element_count());
-        //             }
-        //             else if (type == element::f32)
-        //             {
-        //                 reference::convert<T>(args[0]->get_data_ptr<T>(),
-        //                                       out[0]->get_data_ptr<float>(),
-        //                                       out[0]->get_element_count());
-        //             }
-        //             else if (type == element::f64)
-        //             {
-        //                 reference::convert<T>(args[0]->get_data_ptr<T>(),
-        //                                       out[0]->get_data_ptr<double>(),
-        //                                       out[0]->get_element_count());
-        //             }
-        //             else if (type == element::i8)
-        //             {
-        //                 reference::convert<T>(args[0]->get_data_ptr<T>(),
-        //                                       out[0]->get_data_ptr<int8_t>(),
-        //                                       out[0]->get_element_count());
-        //             }
-        //             else if (type == element::i16)
-        //             {
-        //                 reference::convert<T>(args[0]->get_data_ptr<T>(),
-        //                                       out[0]->get_data_ptr<int16_t>(),
-        //                                       out[0]->get_element_count());
-        //             }
-        //             else if (type == element::i32)
-        //             {
-        //                 reference::convert<T>(args[0]->get_data_ptr<T>(),
-        //                                       out[0]->get_data_ptr<int32_t>(),
-        //                                       out[0]->get_element_count());
-        //             }
-        //             else if (type == element::i64)
-        //             {
-        //                 reference::convert<T>(args[0]->get_data_ptr<T>(),
-        //                                       out[0]->get_data_ptr<int64_t>(),
-        //                                       out[0]->get_element_count());
-        //             }
-        //             else if (type == element::u8)
-        //             {
-        //                 reference::convert<T>(args[0]->get_data_ptr<T>(),
-        //                                       out[0]->get_data_ptr<uint8_t>(),
-        //                                       out[0]->get_element_count());
-        //             }
-        //             else if (type == element::u16)
-        //             {
-        //                 reference::convert<T>(args[0]->get_data_ptr<T>(),
-        //                                       out[0]->get_data_ptr<uint16_t>(),
-        //                                       out[0]->get_element_count());
-        //             }
-        //             else if (type == element::u32)
-        //             {
-        //                 reference::convert<T>(args[0]->get_data_ptr<T>(),
-        //                                       out[0]->get_data_ptr<uint32_t>(),
-        //                                       out[0]->get_element_count());
-        //             }
-        //             else if (type == element::u64)
-        //             {
-        //                 reference::convert<T>(args[0]->get_data_ptr<T>(),
-        //                                       out[0]->get_data_ptr<uint64_t>(),
-        //                                       out[0]->get_element_count());
-        //             }
-        //             else
-        //             {
-        //                 std::stringstream ss;
-        //                 ss << "unsupported element type " << type << " op Convert";
-        //                 throw std::runtime_error(ss.str());
-        //             }
         //         }
         //         else if (node_op == "Convolution")
         //         {
-        //             auto c = static_cast<const op::Convolution*>(&node);
-        //             reference::convolution<T>(args[0]->get_data_ptr<T>(),
-        //                                       args[1]->get_data_ptr<T>(),
-        //                                       out[0]->get_data_ptr<T>(),
-        //                                       args[0]->get_shape(),
-        //                                       args[1]->get_shape(),
-        //                                       out[0]->get_shape(),
-        //                                       c->get_window_movement_strides(),
-        //                                       c->get_window_dilation_strides(),
-        //                                       c->get_padding_below(),
-        //                                       c->get_padding_above(),
-        //                                       c->get_data_dilation_strides(),
-        //                                       0,
-        //                                       1,
-        //                                       1,
-        //                                       0,
-        //                                       0,
-        //                                       1,
-        //                                       false);
         //         }
         //         else if (node_op == "ConvolutionBackpropFilters")
         //         {
@@ -873,144 +694,54 @@ private:
         //         }
         //         else if (node_op == "Cos")
         //         {
-        //             reference::cos<T>(
-        //                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         //         }
         //         else if (node_op == "Cosh")
         //         {
-        //             reference::cosh<T>(
-        //                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         //         }
         //         else if (node_op == "Divide")
         //         {
-        //             reference::divide<T>(args[0]->get_data_ptr<T>(),
-        //                                  args[1]->get_data_ptr<T>(),
-        //                                  out[0]->get_data_ptr<T>(),
-        //                                  out[0]->get_element_count());
         //         }
         //         else if (node_op == "Dot")
         //         {
-        //             op::Dot* dot = dynamic_cast<op::Dot*>(&node);
-
-        //             reference::dot(args[0]->get_data_ptr<T>(),
-        //                            args[1]->get_data_ptr<T>(),
-        //                            out[0]->get_data_ptr<T>(),
-        //                            args[0]->get_shape(),
-        //                            args[1]->get_shape(),
-        //                            out[0]->get_shape(),
-        //                            dot->get_reduction_axes_count());
         //         }
-
         //         else if (node_op == "Equal")
         //         {
-        //             reference::equal<T>(args[0]->get_data_ptr<T>(),
-        //                                 args[1]->get_data_ptr<T>(),
-        //                                 out[0]->get_data_ptr<char>(),
-        //                                 out[0]->get_element_count());
         //         }
         //         else if (node_op == "Exp")
         //         {
-        //             reference::exp<T>(
-        //                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         //         }
         //         else if (node_op == "Floor")
         //         {
-        //             reference::floor<T>(
-        //                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         //         }
         //         else if (node_op == "FunctionCall")
         //         {
-        //             std::shared_ptr<Function> function = node.get_functions()[0];
-
-        //             std::vector<std::shared_ptr<runtime::TensorView>> outputs;
-        //             for (auto tv : out)
-        //             {
-        //                 outputs.push_back(std::static_pointer_cast<runtime::TensorView>(tv));
-        //             }
-
-        //             std::vector<std::shared_ptr<runtime::TensorView>> inputs;
-        //             for (auto tv : args)
-        //             {
-        //                 inputs.push_back(std::static_pointer_cast<runtime::TensorView>(tv));
-        //             }
-
-        //             call(function, outputs, inputs);
         //         }
         //         else if (node_op == "Greater")
         //         {
-        //             reference::greater<T>(args[0]->get_data_ptr<T>(),
-        //                                   args[1]->get_data_ptr<T>(),
-        //                                   out[0]->get_data_ptr<char>(),
-        //                                   out[0]->get_element_count());
         //         }
         //         else if (node_op == "GreaterEq")
         //         {
-        //             reference::greater_eq<T>(args[0]->get_data_ptr<T>(),
-        //                                      args[1]->get_data_ptr<T>(),
-        //                                      out[0]->get_data_ptr<char>(),
-        //                                      out[0]->get_element_count());
         //         }
         //         else if (node_op == "Less")
         //         {
-        //             reference::less<T>(args[0]->get_data_ptr<T>(),
-        //                                args[1]->get_data_ptr<T>(),
-        //                                out[0]->get_data_ptr<char>(),
-        //                                out[0]->get_element_count());
         //         }
         //         else if (node_op == "LessEq")
         //         {
-        //             reference::less_eq<T>(args[0]->get_data_ptr<T>(),
-        //                                   args[1]->get_data_ptr<T>(),
-        //                                   out[0]->get_data_ptr<char>(),
-        //                                   out[0]->get_element_count());
         //         }
         //         else if (node_op == "Log")
         //         {
-        //             reference::log<T>(
-        //                 args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
         //         }
         //         else if (node_op == "Max")
         //         {
-        //             const op::Max* max = static_cast<const op::Max*>(&node);
-        //             reference::max<T>(args[0]->get_data_ptr<T>(),
-        //                               out[0]->get_data_ptr<T>(),
-        //                               args[0]->get_shape(),
-        //                               out[0]->get_shape(),
-        //                               max->get_reduction_axes());
         //         }
         //         else if (node_op == "Maximum")
         //         {
-        //             reference::maximum<T>(args[0]->get_data_ptr<T>(),
-        //                                   args[1]->get_data_ptr<T>(),
-        //                                   out[0]->get_data_ptr<T>(),
-        //                                   out[0]->get_element_count());
         //         }
         //         else if (node_op == "MaxPool")
         //         {
-        //             op::MaxPool* max_pool = dynamic_cast<op::MaxPool*>(&node);
-
-        //             reference::max_pool<T>(args[0]->get_data_ptr<T>(),
-        //                                    out[0]->get_data_ptr<T>(),
-        //                                    args[0]->get_shape(),
-        //                                    out[0]->get_shape(),
-        //                                    max_pool->get_window_shape(),
-        //                                    max_pool->get_window_movement_strides(),
-        //                                    max_pool->get_padding_below(),
-        //                                    max_pool->get_padding_above());
         //         }
         //         else if (node_op == "MaxPoolBackprop")
         //         {
-        //             op::MaxPoolBackprop* max_pool_backprop = dynamic_cast<op::MaxPoolBackprop*>(&node);
-
-        //             reference::max_pool_backprop<T>(args[0]->get_data_ptr<T>(),
-        //                                             args[1]->get_data_ptr<T>(),
-        //                                             out[0]->get_data_ptr<T>(),
-        //                                             args[1]->get_shape(),
-        //                                             out[0]->get_shape(),
-        //                                             max_pool_backprop->get_window_shape(),
-        //                                             max_pool_backprop->get_window_movement_strides(),
-        //                                             max_pool_backprop->get_padding_below(),
-        //                                             max_pool_backprop->get_padding_above());
         //         }
         //         else if (node_op == "Min")
         //         {

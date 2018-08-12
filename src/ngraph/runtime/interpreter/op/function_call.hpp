@@ -54,6 +54,21 @@ public:
     void execute(const std::vector<std::shared_ptr<HostTensorView>>& out,
                  const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
+        // std::shared_ptr<Function> function = m_node->get_functions()[0];
+
+        // std::vector<std::shared_ptr<runtime::TensorView>> outputs;
+        // for (auto tv : out)
+        // {
+        //     outputs.push_back(std::static_pointer_cast<runtime::TensorView>(tv));
+        // }
+
+        // std::vector<std::shared_ptr<runtime::TensorView>> inputs;
+        // for (auto tv : args)
+        // {
+        //     inputs.push_back(std::static_pointer_cast<runtime::TensorView>(tv));
+        // }
+
+        // call(function, outputs, inputs);
     }
 
     OP_TYPEID get_typeid() const override { return OP_TYPEID::FunctionCall_TYPEID; }

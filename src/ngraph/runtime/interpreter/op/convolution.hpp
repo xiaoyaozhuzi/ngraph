@@ -55,6 +55,24 @@ public:
     void execute(const std::vector<std::shared_ptr<HostTensorView>>& out,
                  const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
+        reference::convolution<T>(args[0]->get_data_ptr<T>(),
+                                  args[1]->get_data_ptr<T>(),
+                                  out[0]->get_data_ptr<T>(),
+                                  args[0]->get_shape(),
+                                  args[1]->get_shape(),
+                                  out[0]->get_shape(),
+                                  m_node->get_window_movement_strides(),
+                                  m_node->get_window_dilation_strides(),
+                                  m_node->get_padding_below(),
+                                  m_node->get_padding_above(),
+                                  m_node->get_data_dilation_strides(),
+                                  0,
+                                  1,
+                                  1,
+                                  0,
+                                  0,
+                                  1,
+                                  false);
     }
 
     OP_TYPEID get_typeid() const override { return OP_TYPEID::Convolution_TYPEID; }

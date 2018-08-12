@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cstring>
 #include <memory>
 #include <vector>
 
@@ -54,6 +55,9 @@ public:
     void execute(const std::vector<std::shared_ptr<HostTensorView>>& out,
                  const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
+        size_t n = m_node->get_n();
+        size_t num_bytes = out[0]->get_element_count() * out[0]->get_element_type().size();
+        std::memcpy(out[0]->get_data_ptr(), args[n]->get_data_ptr(), num_bytes);
     }
 
     OP_TYPEID get_typeid() const override { return OP_TYPEID::GetOutputElement_TYPEID; }

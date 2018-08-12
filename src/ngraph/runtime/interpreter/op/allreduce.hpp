@@ -16,7 +16,10 @@
 
 #pragma once
 
+#ifdef NGRAPH_DISTRIBUTED
+
 #include <memory>
+#include <mpi.h>
 #include <vector>
 
 #include "ngraph/op/allreduce.hpp"
@@ -55,9 +58,15 @@ public:
     void execute(const std::vector<std::shared_ptr<HostTensorView>>& out,
                  const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
+        reference::allreduce<T>(args[0]->get_data_ptr<T>(),
+                                out[0]->get_data_ptr<T>(),
+                                args[0]->get_element_type(),
+                                static_cast<int>(args[0]->get_element_count()));
     }
 
     OP_TYPEID get_typeid() const override { return OP_TYPEID::AllReduce_TYPEID; }
 private:
     std::shared_ptr<const ngraph::op::AllReduce> m_node;
 };
+
+#endif

@@ -55,6 +55,8 @@ public:
     void execute(const std::vector<std::shared_ptr<HostTensorView>>& out,
                  const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
+        reference::result(
+            args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), shape_size(m_node->get_shape()));
     }
 
     OP_TYPEID get_typeid() const override { return OP_TYPEID::Result_TYPEID; }

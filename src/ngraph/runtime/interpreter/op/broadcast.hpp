@@ -45,9 +45,9 @@ public:
 
     BroadcastExec(const std::shared_ptr<ngraph::Node> node)
         : ExecNode{node}
-        , m_node{std::dynamic_pointer_cast<const ngraph::op::Broadcast>(node)}
+        , m_broadcast{std::dynamic_pointer_cast<const ngraph::op::Broadcast>(node)}
     {
-        (void)m_node; // Silence compiler warning
+        (void)m_broadcast; // Silence compiler warning
     }
 
     virtual ~BroadcastExec() {}
@@ -55,9 +55,17 @@ public:
     void execute(const std::vector<std::shared_ptr<HostTensorView>>& out,
                  const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
+        Shape in_shape = args[0]->get_shape();
+        Shape out_shape = out[0]->get_shape();
+        AxisSet broadcast_axes = m_broadcast->get_broadcast_axes();
+        reference::broadcast<T>(args[0]->get_data_ptr<T>(),
+                                out[0]->get_data_ptr<T>(),
+                                in_shape,
+                                out_shape,
+                                broadcast_axes);
     }
 
     OP_TYPEID get_typeid() const override { return OP_TYPEID::Broadcast_TYPEID; }
 private:
-    std::shared_ptr<const ngraph::op::Broadcast> m_node;
+    std::shared_ptr<const ngraph::op::Broadcast> m_broadcast;
 };

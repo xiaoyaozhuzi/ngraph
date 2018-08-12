@@ -55,6 +55,8 @@ public:
     void execute(const std::vector<std::shared_ptr<HostTensorView>>& out,
                  const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
+        reference::floor<T>(
+            args[0]->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), out[0]->get_element_count());
     }
 
     OP_TYPEID get_typeid() const override { return OP_TYPEID::Floor_TYPEID; }

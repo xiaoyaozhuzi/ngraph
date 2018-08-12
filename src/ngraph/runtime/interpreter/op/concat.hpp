@@ -55,6 +55,18 @@ public:
     void execute(const std::vector<std::shared_ptr<HostTensorView>>& out,
                  const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
+        std::vector<const T*> in_args;
+        std::vector<Shape> in_shapes;
+        for (std::shared_ptr<HostTensorView> arg : args)
+        {
+            in_args.push_back(arg->get_data_ptr<T>());
+            in_shapes.push_back(arg->get_shape());
+        }
+        reference::concat<T>(in_args,
+                             out[0]->get_data_ptr<T>(),
+                             in_shapes,
+                             out[0]->get_shape(),
+                             m_node->get_concatenation_axis());
     }
 
     OP_TYPEID get_typeid() const override { return OP_TYPEID::Concat_TYPEID; }

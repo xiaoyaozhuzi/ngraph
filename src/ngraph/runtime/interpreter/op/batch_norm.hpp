@@ -55,6 +55,28 @@ public:
     void execute(const std::vector<std::shared_ptr<HostTensorView>>& out,
                  const std::vector<std::shared_ptr<HostTensorView>>& args)
     {
+        if (m_node->get_output_size() == 3)
+        {
+            reference::batch_norm_three_outputs<T>(m_node->get_eps_value(),
+                                                   reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                                   reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                                   reinterpret_cast<T*>(args[2]->get_data_ptr()),
+                                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                                   reinterpret_cast<T*>(out[1]->get_data_ptr()),
+                                                   reinterpret_cast<T*>(out[2]->get_data_ptr()),
+                                                   args[2]->get_shape());
+        }
+        else
+        {
+            reference::batch_norm_one_output<T>(m_node->get_eps_value(),
+                                                reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                                reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                                reinterpret_cast<T*>(args[2]->get_data_ptr()),
+                                                reinterpret_cast<T*>(args[3]->get_data_ptr()),
+                                                reinterpret_cast<T*>(args[4]->get_data_ptr()),
+                                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                                args[2]->get_shape());
+        }
     }
 
     OP_TYPEID get_typeid() const override { return OP_TYPEID::BatchNorm_TYPEID; }

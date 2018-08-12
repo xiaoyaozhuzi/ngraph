@@ -94,7 +94,9 @@ static unordered_map<
     s_list = {{TID(op::Abs), &runtime::interpreter::AbsExec::create},
               {TID(op::Acos), &runtime::interpreter::AcosExec::create},
               {TID(op::Add), &runtime::interpreter::AddExec::create},
+#ifdef NGRAPH_DISTRIBUTED
               {TID(op::AllReduce), &runtime::interpreter::AllReduceExec::create},
+#endif
               {TID(op::And), &runtime::interpreter::AndExec::create},
               {TID(op::Asin), &runtime::interpreter::AsinExec::create},
               {TID(op::Atan), &runtime::interpreter::AtanExec::create},

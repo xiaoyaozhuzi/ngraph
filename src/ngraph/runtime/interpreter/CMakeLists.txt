@@ -46,6 +46,7 @@ set (SRC
     op/log.cpp
     op/max.cpp
     op/maximum.cpp
+    op/max_pool_backprop.cpp
     op/max_pool.cpp
     op/min.cpp
     op/minimum.cpp
