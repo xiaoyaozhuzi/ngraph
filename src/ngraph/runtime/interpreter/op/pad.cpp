@@ -15,6 +15,6 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/interpreter/op/pad.hpp"
-#include "ngraph/runtime/interpreter/op_creator.hpp"
 
-INSTANTIATE_OBJECTS(PadExec)
+
+

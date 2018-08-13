@@ -15,6 +15,6 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/interpreter/op/replace_slice.hpp"
-#include "ngraph/runtime/interpreter/op_creator.hpp"
 
-INSTANTIATE_OBJECTS(ReplaceSliceExec)
+
+

@@ -15,6 +15,6 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/interpreter/op/select.hpp"
-#include "ngraph/runtime/interpreter/op_creator.hpp"
 
-INSTANTIATE_OBJECTS(SelectExec)
+
+

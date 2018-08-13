@@ -15,6 +15,6 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/interpreter/op/max_pool.hpp"
-#include "ngraph/runtime/interpreter/op_creator.hpp"
 
-INSTANTIATE_OBJECTS(MaxPoolExec)
+
+

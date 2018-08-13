@@ -15,6 +15,6 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/interpreter/op/divide.hpp"
-#include "ngraph/runtime/interpreter/op_creator.hpp"
 
-INSTANTIATE_OBJECTS(DivideExec)
+
+

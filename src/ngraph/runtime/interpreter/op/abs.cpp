@@ -15,6 +15,4 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/interpreter/op/abs.hpp"
-#include "ngraph/runtime/interpreter/op_creator.hpp"
 
-INSTANTIATE_OBJECTS(AbsExec)

@@ -15,6 +15,4 @@
 *******************************************************************************/
 
 #include "ngraph/runtime/interpreter/op/acos.hpp"
-#include "ngraph/runtime/interpreter/op_creator.hpp"
 
-INSTANTIATE_OBJECTS(AcosExec)
