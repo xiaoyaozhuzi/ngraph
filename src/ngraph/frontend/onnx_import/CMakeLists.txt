@@ -16,6 +16,11 @@
 
 set(ONNX_SOURCE_URL "https://raw.githubusercontent.com/onnx/onnx/v1.1.2/onnx/onnx.proto")
 
+set(PROTOBUF_DIR $ENV{HOME}/__install/usr/local)
+set(PROTOBUF_LIBRARY_DIR ${PROTOBUF_DIR}/lib)
+set(PROTOBUF_INCLUDE_DIR ${PROTOBUF_DIR}/include)
+set(PROTOBUF_PROTOC_EXECUTABLE ${PROTOBUF_DIR}/bin/protoc)
+
 set_source_files_properties(onnx.pb.h onnx.pb.cc PROPERTIES GENERATED TRUE)
 
 if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/onnx.proto")
@@ -48,11 +53,11 @@ add_library(onnx_import STATIC
 add_dependencies(onnx_import onnx_import_interface)
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${NGRAPH_INCLUDE_PATH})
-target_link_libraries(onnx_import PRIVATE ${PROTOBUF_LIBRARIES})
+target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${NGRAPH_INCLUDE_PATH} ${PROTOBUF_INCLUDE_DIR})
+target_link_libraries(onnx_import PRIVATE ${PROTOBUF_LIBRARY_DIR}/libprotobuf.a)
 
 set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import_interface PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${NGRAPH_INCLUDE_PATH})
+target_include_directories(onnx_import_interface PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${NGRAPH_INCLUDE_PATH} ${PROTOBUF_INCLUDE_DIR})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
