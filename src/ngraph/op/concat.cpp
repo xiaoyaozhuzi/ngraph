@@ -78,7 +78,7 @@ void op::Concat::validate_and_infer_types()
     vector<size_t> concatenated_shape = input_0_shape;
     concatenated_shape.at(m_concatenation_axis) = concatenation_axis_length;
 
-    set_value_type_checked(make_shared<TensorViewType>(input_0_element_type, concatenated_shape));
+    set_output_type(0, make_shared<TensorViewType>(input_0_element_type, concatenated_shape));
 }
 
 shared_ptr<Node> op::Concat::copy_with_new_args(const NodeVector& new_args) const
