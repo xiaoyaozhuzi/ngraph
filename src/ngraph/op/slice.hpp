@@ -86,7 +86,7 @@ namespace ngraph
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            void check_args();
+            void validate_and_infer_types() override;
 
             const Coordinate m_lower_bounds;
             const Coordinate m_upper_bounds;
